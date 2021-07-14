@@ -2,9 +2,20 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[Flags]
+enum PlayerCollisionFlags
+{
+	None = 0,
+	Left = 1 << 0,
+	Right = 1 << 1
+}
+
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
+	[SerializeField] private Animator _animator;
+	[SerializeField] private SpriteRenderer _spriteRenderer;
+
 	[SerializeField] private float _speed = 1.0f;
 	[SerializeField] private float _inertiaDecay = 0.1f;
 	[SerializeField] private float _deadzone = 0.2f;
@@ -20,12 +31,16 @@ public class PlayerController : MonoBehaviour
 
 	private Vector2 _spawnPos = default;
 	private Rigidbody2D _rigidBody = null;
+	private int _animIsOnGroundId;
+	private int _animIsRunning;
+	private int _animVelocityYId;
 	
 	private Vector2 _moveVector = default;
 	private bool _jumpHeld = default;
 	private bool _onGround = false;
 	private float _lastTimeOnGround = float.MinValue;
 
+	private PlayerCollisionFlags CollisionFlags;
 
 	public bool OnGround => _onGround;
 	public Vector2 Position => transform.position;
@@ -34,6 +49,10 @@ public class PlayerController : MonoBehaviour
 	{
 		_spawnPos = transform.position;
 		_rigidBody = GetComponent<Rigidbody2D>();
+
+		_animIsOnGroundId = Animator.StringToHash("IsOnGround");
+		_animIsRunning= Animator.StringToHash("IsRunning");
+		_animVelocityYId = Animator.StringToHash("VelocityY");
 	}
 
 	private void Update()
@@ -42,6 +61,24 @@ public class PlayerController : MonoBehaviour
 		UpdateMovement();
 		UpdateJump();
 		UpdateFallDeath();
+		UpdateAnimation();
+	}
+
+	private void UpdateAnimation()
+	{
+		_animator.SetBool(_animIsOnGroundId, _onGround);
+		_animator.SetBool(_animIsRunning, _onGround && (Mathf.Abs(_moveVector.x) > _deadzone));
+		_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
+
+
+		if(_rigidBody.velocity.x > 0.0f)
+		{
+			_spriteRenderer.flipX = false;
+		}
+		else if(_rigidBody.velocity.x < 0.0f)
+		{
+			_spriteRenderer.flipX = true;
+		}
 	}
 
 	private void OnDrawGizmos()
