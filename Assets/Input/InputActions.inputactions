@@ -35,6 +35,17 @@
                     "isPartOfComposite": false
                 },
                 {
+                    "name": "",
+                    "id": "adf4e044-9cc3-40e8-b05e-90bec8f468e3",
+                    "path": "<Keyboard>/backspace",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
                     "name": "2D Vector",
                     "id": "ff2a7a18-26ae-4d6b-8548-58366d627f3f",
                     "path": "2DVector",
