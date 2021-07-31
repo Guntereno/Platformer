@@ -1,3 +1,4 @@
+using Momo.Core;
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -51,13 +52,13 @@ public class PlayerController : MonoBehaviour
 	private bool _jumpHeld = default;
 	private bool _runHeld = default;
 
-	private ContactFlags _contactFlags = ContactFlags.None;
+	private Flags32<ContactFlags> _contactFlags = ContactFlags.None;
 	private float _lastTimeOnGround = float.MinValue;
 
 	private readonly PlayerCollisionFlags CollisionFlags;
 
-	public bool OnGround => (_contactFlags & ContactFlags.Ground) != ContactFlags.None;
-	public bool OnWall => (_contactFlags & (ContactFlags.LeftWall | ContactFlags.RightWall)) != ContactFlags.None;
+	public bool OnGround => _contactFlags.TestAny(ContactFlags.Ground);
+	public bool OnWall => _contactFlags.TestAny(ContactFlags.LeftWall | ContactFlags.RightWall);
 
 	public Vector2 Position => transform.position;
 
@@ -71,6 +72,16 @@ public class PlayerController : MonoBehaviour
 		_animIsOnGroundId = Animator.StringToHash("IsOnGround");
 		_animIsRunning = Animator.StringToHash("IsRunning");
 		_animVelocityYId = Animator.StringToHash("VelocityY");
+
+		int count;
+
+		Flags32<ContactFlags> flags;
+		flags = ContactFlags.Ceiling;
+		count = flags.CountBits();
+		flags = ContactFlags.Ceiling | ContactFlags.LeftWall;
+		count = flags.CountBits();
+		flags = ContactFlags.Ceiling | ContactFlags.LeftWall | ContactFlags.Unknown;
+		count = flags.CountBits();
 	}
 
 	private void FixedUpdate()
@@ -98,7 +109,7 @@ public class PlayerController : MonoBehaviour
 		foreach (ContactPoint2D contact in collision.contacts)
 		{
 			Debug.DrawRay(contact.point, contact.normal, Color.green);
-			_contactFlags |= GetContactFlags(contact);
+			_contactFlags.Set(GetContactFlags(contact));
 		}
 	}
 
@@ -107,7 +118,7 @@ public class PlayerController : MonoBehaviour
 		foreach (ContactPoint2D contact in collision.contacts)
 		{
 			Debug.DrawRay(contact.point, contact.normal, Color.white);
-			_contactFlags |= GetContactFlags(contact);
+			_contactFlags.Set(GetContactFlags(contact));
 		}
 	}
 
@@ -197,14 +208,14 @@ public class PlayerController : MonoBehaviour
 		_rigidBody.velocity = _rigidBody.velocity.WithX(xVelocity);
 	}
 
-	private static float ClampVelocityIntoWall(ContactFlags contactFlags, float xVelocity)
+	private static float ClampVelocityIntoWall(Flags32<ContactFlags> contactFlags, float xVelocity)
 	{
-		if (((contactFlags & ContactFlags.LeftWall) != ContactFlags.None) && (xVelocity < 0.0f))
+		if (contactFlags.TestAny(ContactFlags.LeftWall) && (xVelocity < 0.0f))
 		{
 			return 0.0f;
 		}
 
-		if (((contactFlags & ContactFlags.RightWall) != ContactFlags.None) && (xVelocity > 0.0f))
+		if (contactFlags.TestAny(ContactFlags.RightWall) && (xVelocity < 0.0f))
 		{
 			return 0.0f;
 		}
@@ -250,7 +261,7 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
-	private ContactFlags GetContactFlags(ContactPoint2D contact)
+	private Flags32<ContactFlags> GetContactFlags(ContactPoint2D contact)
 	{
 		float dot = Vector3.Dot(Vector2.up, contact.normal);
 		if ((1.0f - dot) <= _groundSlope)

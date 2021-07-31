@@ -1,4 +1,5 @@
 using UnityEngine;
+using Momo.Core;
 
 [RequireComponent(typeof(Camera))]
 public class CameraController : MonoBehaviour
