@@ -26,6 +26,16 @@ public class PlayerController : MonoBehaviour
 		LeftWall = 1 << 4
 	}
 
+	[Flags]
+	private enum InputFlags
+	{
+		None = 0,
+
+		Jump = 1 << 0,
+		Run = 1 << 1,
+		Crouch = 1 << 2
+	}
+
 	[SerializeField] private Animator _animator = null;
 	[SerializeField] private SpriteRenderer _spriteRenderer = null;
 
@@ -47,10 +57,28 @@ public class PlayerController : MonoBehaviour
 	private int _animIsOnGroundId;
 	private int _animIsRunning;
 	private int _animVelocityYId;
+	private int _animIsCrouchingId;
 
 	private Vector2 _moveVector = default;
-	private bool _jumpHeld = default;
-	private bool _runHeld = default;
+	private Flags32<InputFlags> _inputFlags = InputFlags.None;
+
+	private bool JumpHeld
+	{
+		get => _inputFlags.TestAll(InputFlags.Jump);
+		set => _inputFlags.Assign(InputFlags.Jump, value);
+	}
+
+	private bool RunHeld
+	{
+		get => _inputFlags.TestAll(InputFlags.Run);
+		set => _inputFlags.Assign(InputFlags.Run, value);
+	}
+
+	private bool CrouchHeld
+	{
+		get => _inputFlags.TestAll(InputFlags.Crouch);
+		set => _inputFlags.Assign(InputFlags.Crouch, value);
+	}
 
 	private Flags32<ContactFlags> _contactFlags = ContactFlags.None;
 	private float _lastTimeOnGround = float.MinValue;
@@ -59,6 +87,7 @@ public class PlayerController : MonoBehaviour
 
 	public bool OnGround => _contactFlags.TestAny(ContactFlags.Ground);
 	public bool OnWall => _contactFlags.TestAny(ContactFlags.LeftWall | ContactFlags.RightWall);
+	public bool IsCrouching => OnGround && CrouchHeld;
 
 	public Vector2 Position => transform.position;
 
@@ -72,6 +101,7 @@ public class PlayerController : MonoBehaviour
 		_animIsOnGroundId = Animator.StringToHash("IsOnGround");
 		_animIsRunning = Animator.StringToHash("IsRunning");
 		_animVelocityYId = Animator.StringToHash("VelocityY");
+		_animIsCrouchingId = Animator.StringToHash("IsCrouching");
 
 		int count;
 
@@ -127,6 +157,7 @@ public class PlayerController : MonoBehaviour
 		_animator.SetBool(_animIsOnGroundId, OnGround);
 		_animator.SetBool(_animIsRunning, OnGround && ((Mathf.Abs(_moveVector.x) > _deadzone)));
 		_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
+		_animator.SetBool(_animIsCrouchingId, IsCrouching);
 
 		if (_rigidBody.velocity.x > 0.0f)
 		{
@@ -150,20 +181,26 @@ public class PlayerController : MonoBehaviour
 
 	private void OnJump(InputValue input)
 	{
-		bool jumpHeld = input.Get<float>() > 0.0f;
+		bool isHeld = input.Get<float>() > 0.0f;
 
 		bool canJump = OnGround || IsInCoyoteTime;
-		if (canJump && (!_jumpHeld && jumpHeld))
+		bool wasHeld = JumpHeld;
+		if (canJump && (!wasHeld && isHeld))
 		{
 			ApplyJumpImpuse();
 		}
 
-		_jumpHeld = jumpHeld;
+		JumpHeld = isHeld;
 	}
 
 	private void OnRun(InputValue input)
 	{
-		_runHeld = input.Get<float>() > 0.0f;
+		RunHeld = (input.Get<float>() > 0.0f);
+	}
+
+	private void OnCrouch(InputValue input)
+	{
+		CrouchHeld = (input.Get<float>() > 0.0f);
 	}
 
 	#endregion
@@ -173,10 +210,10 @@ public class PlayerController : MonoBehaviour
 	{
 		float xVelocity = 0.0f;
 
-		if (Mathf.Abs(_moveVector.x) > _deadzone)
+		if ((Mathf.Abs(_moveVector.x) > _deadzone) && !IsCrouching)
 		{
 			float speed = _speed;
-			if(_runHeld)
+			if (RunHeld)
 			{
 				speed *= _runFactor;
 			}
@@ -233,7 +270,7 @@ public class PlayerController : MonoBehaviour
 		}
 		// Ensure character falls faster if they're not holding the
 		// jump button
-		else if ((_rigidBody.velocity.y > 0.0f) && !_jumpHeld)
+		else if ((_rigidBody.velocity.y > 0.0f) && !JumpHeld)
 		{
 			_rigidBody.velocity +=
 				GetGravityRelativeForce(_lowJumpFactor) * Time.deltaTime;
