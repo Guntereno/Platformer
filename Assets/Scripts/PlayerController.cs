@@ -28,14 +28,17 @@ public class PlayerController : MonoBehaviour
 	[SerializeField] private Animator _animator = null;
 	[SerializeField] private SpriteRenderer _spriteRenderer = null;
 
-	[SerializeField] private float _speed = 1.0f;
-	[SerializeField] private float _inertiaDecay = 0.1f;
 	[SerializeField] private float _deadzone = 0.2f;
+	[SerializeField] private float _speed = 1.0f;
+	[SerializeField] private float _runFactor = 1.5f;
+	[SerializeField] private float _inertiaDecay = 0.1f;
 
 	[SerializeField] private float _jumpImpulse = 4.0f;
 	[SerializeField] private float _fallFactor = 0.0f;
 	[SerializeField] private float _lowJumpFactor = 0.0f;
 	[SerializeField] private float _coyoteTime = 0.0f;
+
+	[SerializeField] private float _groundSlope = 0.02f;
 
 	private Vector2 _spawnPos = default;
 	private Rigidbody2D _rigidBody = null;
@@ -46,6 +49,8 @@ public class PlayerController : MonoBehaviour
 
 	private Vector2 _moveVector = default;
 	private bool _jumpHeld = default;
+	private bool _runHeld = default;
+
 	private ContactFlags _contactFlags = ContactFlags.None;
 	private float _lastTimeOnGround = float.MinValue;
 
@@ -145,6 +150,11 @@ public class PlayerController : MonoBehaviour
 		_jumpHeld = jumpHeld;
 	}
 
+	private void OnRun(InputValue input)
+	{
+		_runHeld = input.Get<float>() > 0.0f;
+	}
+
 	#endregion
 
 
@@ -154,8 +164,14 @@ public class PlayerController : MonoBehaviour
 
 		if (Mathf.Abs(_moveVector.x) > _deadzone)
 		{
+			float speed = _speed;
+			if(_runHeld)
+			{
+				speed *= _runFactor;
+			}
+
 			// Apply movent requested via input
-			xVelocity = ((_moveVector.x > 0.0f) ? 1.0f : -1.0f) * _speed;
+			xVelocity = ((_moveVector.x > 0.0f) ? 1.0f : -1.0f) * speed;
 		}
 		else if (OnGround)
 		{
@@ -237,7 +253,7 @@ public class PlayerController : MonoBehaviour
 	private ContactFlags GetContactFlags(ContactPoint2D contact)
 	{
 		float dot = Vector3.Dot(Vector2.up, contact.normal);
-		if (dot >= (1.0f - float.Epsilon))
+		if ((1.0f - dot) <= _groundSlope)
 			return ContactFlags.Ground;
 		else if (dot <= float.Epsilon)
 			return (contact.normal.x > 0.0f) ? ContactFlags.LeftWall : ContactFlags.RightWall;
