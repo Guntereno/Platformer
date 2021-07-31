@@ -55,7 +55,7 @@ public class PlayerController : MonoBehaviour
 	private Rigidbody2D _rigidBody = null;
 
 	private int _animIsOnGroundId;
-	private int _animIsRunning;
+	private int _animSpeedX;
 	private int _animVelocityYId;
 	private int _animIsCrouchingId;
 
@@ -99,7 +99,7 @@ public class PlayerController : MonoBehaviour
 		_rigidBody = GetComponent<Rigidbody2D>();
 
 		_animIsOnGroundId = Animator.StringToHash("IsOnGround");
-		_animIsRunning = Animator.StringToHash("IsRunning");
+		_animSpeedX = Animator.StringToHash("SpeedX");
 		_animVelocityYId = Animator.StringToHash("VelocityY");
 		_animIsCrouchingId = Animator.StringToHash("IsCrouching");
 
@@ -155,7 +155,7 @@ public class PlayerController : MonoBehaviour
 	private void UpdateAnimation()
 	{
 		_animator.SetBool(_animIsOnGroundId, OnGround);
-		_animator.SetBool(_animIsRunning, OnGround && ((Mathf.Abs(_moveVector.x) > _deadzone)));
+		_animator.SetFloat(_animSpeedX, Mathf.Abs(_rigidBody.velocity.x) / (_speed * _runFactor));
 		_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
 		_animator.SetBool(_animIsCrouchingId, IsCrouching);
 
@@ -252,7 +252,7 @@ public class PlayerController : MonoBehaviour
 			return 0.0f;
 		}
 
-		if (contactFlags.TestAny(ContactFlags.RightWall) && (xVelocity < 0.0f))
+		if (contactFlags.TestAny(ContactFlags.RightWall) && (xVelocity > 0.0f))
 		{
 			return 0.0f;
 		}
