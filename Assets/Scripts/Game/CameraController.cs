@@ -126,13 +126,15 @@ public class CameraController : MonoBehaviour
 		DrawBoundsGizmo(
 			Color.cyan.WithA(0.2f),
 			minX, maxX,
-			screenMinY, screenMaxY);
+			transform.position.y + screenMinY,
+			transform.position.y + screenMaxY);
 
 		GetVerticalBounds(out float minY, out float maxY);
 
 		DrawBoundsGizmo(
 			Color.magenta.WithA(0.2f),
-			screenMinX, screenMaxX,
+			transform.position.x + screenMinX,
+			transform.position.x + screenMaxX,
 			minY, maxY);
 	}
 
