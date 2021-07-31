@@ -965,7 +965,7 @@ MonoBehaviour:
   _focusZoneWidth: 0.61
   _focusZoneOffsetY: 0.1
   _focusZoneHeight: 0.39
-  _cameraLerpParam: 0.1
+  _cameraLerpParam: 0.02
   _scrollY: 1
 --- !u!1 &926451827
 GameObject:

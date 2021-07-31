@@ -70,7 +70,6 @@ public class PlayerController : MonoBehaviour
 		_animator.SetBool(_animIsRunning, _onGround && (Mathf.Abs(_moveVector.x) > _deadzone));
 		_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
 
-
 		if(_rigidBody.velocity.x > 0.0f)
 		{
 			_spriteRenderer.flipX = false;
