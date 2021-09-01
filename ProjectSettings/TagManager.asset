@@ -38,6 +38,9 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Ground
+    uniqueID: 1887405535
+    locked: 0
   - name: Projectiles
     uniqueID: 4019579567
     locked: 0

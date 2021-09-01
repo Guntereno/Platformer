@@ -52,8 +52,6 @@ namespace Game
 		[SerializeField] private float _lowJumpFactor = 0.0f;
 		[SerializeField] private float _coyoteTime = 0.0f;
 
-		[SerializeField] private float _groundSlopeRadians = 0.02f;
-
 		[SerializeField] private Weapon _currentGun = null;
 
 		private Vector2 _spawnPos = default;
@@ -91,9 +89,9 @@ namespace Game
 
 		private readonly PlayerCollisionFlags CollisionFlags;
 
-		public bool OnGround => _contactFlags.TestAny(ContactFlags.Ground);
+		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.Ground);
 		public bool OnWall => _contactFlags.TestAny(ContactFlags.LeftWall | ContactFlags.RightWall);
-		public bool IsCrouching => OnGround && CrouchHeld;
+		public bool IsCrouching => IsOnGround && CrouchHeld;
 
 		public Vector2 Position => _transform.position;
 
@@ -132,7 +130,7 @@ namespace Game
 
 		private void Update()
 		{
-			if (OnGround)
+			if (IsOnGround)
 			{
 				_lastTimeOnGround = Time.time;
 			}
@@ -140,9 +138,6 @@ namespace Game
 			UpdateMovement();
 			UpdateJump();
 			UpdateAnimation();
-
-			Vector3 ray = new Vector3(Mathf.Cos(_groundSlopeRadians), Mathf.Sin(_groundSlopeRadians), 0.0f);
-			Debug.DrawRay(Position, ray, Color.green);
 		}
 
 		private void OnCollisionEnter2D(Collision2D collision)
@@ -165,7 +160,7 @@ namespace Game
 
 		private void UpdateAnimation()
 		{
-			_animator.SetBool(_animIsOnGroundId, OnGround);
+			_animator.SetBool(_animIsOnGroundId, IsOnGround || IsInCoyoteTime);
 			_animator.SetFloat(_animSpeedX, Mathf.Abs(_rigidBody.velocity.x) / (_speed * _runFactor));
 			_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
 			_animator.SetBool(_animIsCrouchingId, IsCrouching);
@@ -194,7 +189,7 @@ namespace Game
 		{
 			bool isHeld = input.Get<float>() > 0.0f;
 
-			bool canJump = OnGround || IsInCoyoteTime;
+			bool canJump = IsOnGround || IsInCoyoteTime;
 			bool wasHeld = JumpHeld;
 			if (canJump && (!wasHeld && isHeld))
 			{
@@ -240,7 +235,7 @@ namespace Game
 				// Apply movent requested via input
 				xVelocity = ((_moveVector.x > 0.0f) ? 1.0f : -1.0f) * speed;
 			}
-			else if (OnGround)
+			else if (IsOnGround)
 			{
 				// Lerp towards stationary, simulating inertia
 				xVelocity = Mathf.Lerp(
@@ -256,7 +251,7 @@ namespace Game
 			}
 
 			// Remove airborne velocity into a wall
-			if (OnWall && !OnGround)
+			if (OnWall && !IsOnGround)
 			{
 				xVelocity = ClampVelocityIntoWall(_contactFlags, xVelocity);
 			}
@@ -311,7 +306,7 @@ namespace Game
 
 		private void UpdateFallDeath()
 		{
-			if (_transform.position.y < -1.0f)
+			if (_transform.position.y < 0.0f)
 			{
 				_transform.position = _spawnPos;
 			}
@@ -322,23 +317,23 @@ namespace Game
 			Flags32<ContactFlags> result = ContactFlags.Unknown;
 
 			float dot = Vector3.Dot(Vector2.up, contact.normal);
-			float theta = Mathf.Acos(dot);
+			
+			const float degrees45 = 45.0f;
+			const float radians45 = degrees45 * Mathf.Deg2Rad;
+			const float radians135 = radians45 + (90.0f * Mathf.Deg2Rad);
 
-			if (theta <= _groundSlopeRadians)
+			if (dot > Mathf.Cos(radians45))
 			{
-				result.Set(ContactFlags.Ground);
+				return ContactFlags.Ground;
 			}
-			else if ((Math.PI - Mathf.Abs(theta)) < _groundSlopeRadians)
+			else if (dot < Mathf.Cos(radians135))
 			{
-				result.Set(ContactFlags.Ceiling);
+				return ContactFlags.Ceiling;
 			}
-
-			if (dot <= float.Epsilon)
+			else
 			{
-				return (contact.normal.x > 0.0f) ? ContactFlags.LeftWall : ContactFlags.RightWall;
+				return ((contact.normal.x > 0.0f) ? ContactFlags.LeftWall : ContactFlags.RightWall);
 			}
-
-			return result;
 		}
 	}
 
