@@ -52,7 +52,7 @@ namespace Game
 		[SerializeField] private float _lowJumpFactor = 0.0f;
 		[SerializeField] private float _coyoteTime = 0.0f;
 
-		[SerializeField] private float _groundSlope = 0.02f;
+		[SerializeField] private float _groundSlopeRadians = 0.02f;
 
 		[SerializeField] private Weapon _currentGun = null;
 
@@ -140,6 +140,9 @@ namespace Game
 			UpdateMovement();
 			UpdateJump();
 			UpdateAnimation();
+
+			Vector3 ray = new Vector3(Mathf.Cos(_groundSlopeRadians), Mathf.Sin(_groundSlopeRadians), 0.0f);
+			Debug.DrawRay(Position, ray, Color.green);
 		}
 
 		private void OnCollisionEnter2D(Collision2D collision)
@@ -213,7 +216,7 @@ namespace Game
 
 		private void OnFire(InputValue input)
 		{
-			if(_currentGun != null)
+			if (_currentGun != null)
 			{
 				_currentGun.OnFire(input.Get<float>() > 0.0f);
 			}
@@ -316,15 +319,26 @@ namespace Game
 
 		private Flags32<ContactFlags> GetContactFlags(ContactPoint2D contact)
 		{
+			Flags32<ContactFlags> result = ContactFlags.Unknown;
+
 			float dot = Vector3.Dot(Vector2.up, contact.normal);
-			if ((1.0f - dot) <= _groundSlope)
-				return ContactFlags.Ground;
-			else if (dot <= float.Epsilon)
+			float theta = Mathf.Acos(dot);
+
+			if (theta <= _groundSlopeRadians)
+			{
+				result.Set(ContactFlags.Ground);
+			}
+			else if ((Math.PI - Mathf.Abs(theta)) < _groundSlopeRadians)
+			{
+				result.Set(ContactFlags.Ceiling);
+			}
+
+			if (dot <= float.Epsilon)
+			{
 				return (contact.normal.x > 0.0f) ? ContactFlags.LeftWall : ContactFlags.RightWall;
-			else if (dot <= (-1.0f - float.Epsilon))
-				return ContactFlags.Ceiling;
-			else
-				return ContactFlags.Unknown;
+			}
+
+			return result;
 		}
 	}
 
