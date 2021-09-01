@@ -306,29 +306,9 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1475674057}
     m_Modifications:
-    - target: {fileID: 5024435937981082784, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
-      propertyPath: m_SortingLayer
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5024435937981082784, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
-      propertyPath: m_SortingOrder
-      value: -1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5024435937981082784, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
-      propertyPath: m_SortingLayerID
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 5024435937981082785, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
       propertyPath: m_RootOrder
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5024435937981082785, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5024435937981082785, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5024435937981082785, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
       propertyPath: m_LocalPosition.x
@@ -373,14 +353,6 @@ PrefabInstance:
     - target: {fileID: 5024435937981082790, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
       propertyPath: m_Name
       value: Pistol
-      objectReference: {fileID: 0}
-    - target: {fileID: 5024435937981082790, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
-      propertyPath: m_Layer
-      value: 7
-      objectReference: {fileID: 0}
-    - target: {fileID: 6661699042685914552, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
-      propertyPath: m_Layer
-      value: 7
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aec592f00c31bf74285ae3060e4ef062, type: 3}
