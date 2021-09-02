@@ -309,6 +309,7 @@ namespace Game
 			if (_transform.position.y < 0.0f)
 			{
 				_transform.position = _spawnPos;
+				_rigidBody.velocity = Vector2.zero;
 			}
 		}
 
