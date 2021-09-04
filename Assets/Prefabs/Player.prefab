@@ -48,14 +48,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _animator: {fileID: 2619971862419907296}
+  _collider: {fileID: 611855502825437868}
+  _rigidBody: {fileID: 2619971862393951112}
   _deadzone: 0.2
   _speed: 5
   _runFactor: 2
-  _inertiaDecay: 0.02
+  _inertiaDecay: 0.08
   _jumpImpulse: 15
   _fallFactor: 2
   _lowJumpFactor: 1.2
   _coyoteTime: 0.1
+  _contectCheckDistance: 0.15
   _currentGun: {fileID: 0}
 --- !u!50 &2619971862393951112
 Rigidbody2D:
@@ -150,8 +153,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2619971862419907301}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.44, z: 0}
-  m_LocalScale: {x: 9, y: 9, z: 1}
+  m_LocalPosition: {x: 0, y: -0.7, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2619971864042329439}
   m_Father: {fileID: 2619971862393951115}
@@ -252,7 +255,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2619971864042329438}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.0525, y: -0.1019, z: 0}
+  m_LocalPosition: {x: 0.393, y: 0.4, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2619971862419907298}

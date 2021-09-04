@@ -1,3 +1,4 @@
+using Core;
 using Game.Guns;
 using Momo.Core;
 using System;
@@ -15,7 +16,7 @@ namespace Game
 		Right = 1 << 1
 	}
 
-	[RequireComponent(typeof(Rigidbody2D))]
+	[RequireComponent(typeof(Animator), typeof(Collider), typeof(Rigidbody2D))]
 	public class PlayerController : MonoBehaviour
 	{
 		[Flags]
@@ -24,10 +25,9 @@ namespace Game
 			None = 0,
 
 			Unknown = 1 << 0,
-			Ceiling = 1 << 1,
-			RightWall = 1 << 2,
-			Ground = 1 << 3,
-			LeftWall = 1 << 4
+			RightWall = 1 << 1,
+			Ground = 1 << 2,
+			LeftWall = 1 << 3
 		}
 
 		[Flags]
@@ -41,6 +41,8 @@ namespace Game
 		}
 
 		[SerializeField] private Animator _animator = null;
+		[SerializeField] private CapsuleCollider2D _collider = null;
+		[SerializeField] private Rigidbody2D _rigidBody = null;
 
 		[SerializeField] private float _deadzone = 0.2f;
 		[SerializeField] private float _speed = 1.0f;
@@ -51,17 +53,24 @@ namespace Game
 		[SerializeField] private float _fallFactor = 0.0f;
 		[SerializeField] private float _lowJumpFactor = 0.0f;
 		[SerializeField] private float _coyoteTime = 0.0f;
+		[SerializeField] private float _contectCheckDistance = 0.1f;
 
 		[SerializeField] private Weapon _currentGun = null;
 
 		private Vector2 _spawnPos = default;
-		private Rigidbody2D _rigidBody = null;
 		private Transform _transform = null;
+
+		private float _capsuleBoxWidth;
+		private float _capsuleBoxHeight;
+		private float _capsuleCircleOffset;
+		private float _capsuleCircleRadius;
 
 		private int _animIsOnGroundId;
 		private int _animSpeedX;
 		private int _animVelocityYId;
 		private int _animIsCrouchingId;
+
+		private int _raycastMask;
 
 		private Vector2 _moveVector = default;
 		private Flags32<InputFlags> _inputFlags = InputFlags.None;
@@ -102,6 +111,16 @@ namespace Game
 			_transform = transform;
 			_rigidBody = GetComponent<Rigidbody2D>();
 
+			if(_collider.size.x > _collider.size.y)
+			{
+				throw new Exception("Collider should be taller than it is wide!");
+			}
+
+			_capsuleBoxWidth = _collider.size.x;
+			_capsuleBoxHeight = (_collider.size.y - _collider.size.x);
+			_capsuleCircleOffset = _capsuleBoxHeight * 0.5f;
+			_capsuleCircleRadius = _capsuleBoxWidth * 0.5f;
+
 			_spawnPos = _transform.position;
 
 			_animIsOnGroundId = Animator.StringToHash("IsOnGround");
@@ -109,21 +128,12 @@ namespace Game
 			_animVelocityYId = Animator.StringToHash("VelocityY");
 			_animIsCrouchingId = Animator.StringToHash("IsCrouching");
 
-			int count;
-
-			Flags32<ContactFlags> flags;
-			flags = ContactFlags.Ceiling;
-			count = flags.CountBits();
-			flags = ContactFlags.Ceiling | ContactFlags.LeftWall;
-			count = flags.CountBits();
-			flags = ContactFlags.Ceiling | ContactFlags.LeftWall | ContactFlags.Unknown;
-			count = flags.CountBits();
+			_raycastMask = LayerMask.GetMask("Ground", "Props");
 		}
 
 		private void FixedUpdate()
 		{
-			// Reset contact flags prior to doing the physics step
-			_contactFlags = ContactFlags.None;
+			_contactFlags = CheckForContact();
 
 			UpdateFallDeath();
 		}
@@ -140,22 +150,87 @@ namespace Game
 			UpdateAnimation();
 		}
 
-		private void OnCollisionEnter2D(Collision2D collision)
+		void OnGUI()
 		{
-			foreach (ContactPoint2D contact in collision.contacts)
-			{
-				Debug.DrawRay(contact.point, contact.normal, Color.green);
-				_contactFlags.Set(GetContactFlags(contact));
-			}
+#if UNITY_EDITOR
+			GUI.Label(new Rect(25, 25, 180, 20), $"IsOnGround: {IsOnGround}");
+			GUI.Label(new Rect(25, 45, 180, 20), $"Velocity: {_rigidBody.velocity}");
+#endif
 		}
 
-		private void OnCollisionStay2D(Collision2D collision)
+		private Flags32<ContactFlags> CheckForContact()
 		{
-			foreach (ContactPoint2D contact in collision.contacts)
+			Flags32<ContactFlags> result = ContactFlags.None;
+
+			if(ContactCapCheck(Vector2.down))
 			{
-				Debug.DrawRay(contact.point, contact.normal, Color.white);
-				_contactFlags.Set(GetContactFlags(contact));
+				result.Set(ContactFlags.Ground);
 			}
+
+			RaycastHit2D rightHit = ContactSideCheck(Vector2.right);
+			if(rightHit)
+			{
+				result.Set(ContactFlags.RightWall);
+			}
+
+			RaycastHit2D leftHit = ContactSideCheck(Vector2.left);
+			if (leftHit)
+			{
+				result.Set(ContactFlags.LeftWall);
+			}
+
+			return result;
+		}
+
+		private RaycastHit2D ContactCapCheck(Vector2 dir)
+		{
+			if (Mathf.Abs(dir.x) > 0.0f)
+			{
+				throw new Exception("Cap checks must be vertical!");
+			}
+
+			Vector2 origin = (Vector2)_transform.position + (dir * _capsuleCircleOffset);
+
+			float radius = _capsuleCircleRadius;
+			RaycastHit2D hit = Physics2D.CircleCast(origin, radius, Vector2.down, _contectCheckDistance, _raycastMask);
+
+#if UNITY_EDITOR
+			bool hitOccured = (hit.collider != null);
+			Vector2 startDir = dir.PerpendicularR();
+			float startTheta = Mathf.Atan2(startDir.y, startDir.x);
+			Vector2 arcCenter = origin + (dir * _contectCheckDistance);
+			DebugDraw.Arc(arcCenter, startTheta, Mathf.PI, radius, (hitOccured ? Color.green : Color.grey));
+#endif
+
+			return hit;
+		}
+
+		private RaycastHit2D ContactSideCheck(Vector2 dir)
+		{
+			if(Mathf.Abs(dir.y) > 0.0f)
+			{
+				throw new Exception("Side checks must be horizontal!");
+			}
+
+			Vector2 boxSize = new Vector2(_capsuleBoxWidth * 0.5f, _capsuleBoxHeight);
+			Vector2 origin = (Vector2)_transform.position + (dir * (boxSize.x * 0.5f));
+
+			RaycastHit2D hit = Physics2D.BoxCast(
+				origin, boxSize, 
+				angle:0.0f,
+				dir,
+				distance:_contectCheckDistance,
+				layerMask:_raycastMask);
+
+#if UNITY_EDITOR
+			bool hitOccured = (hit.collider != null);
+			Vector2 start = origin + (dir * ((boxSize.x * 0.5f) + _contectCheckDistance));
+			start.y += boxSize.y * 0.5f;
+			Vector2 end = start + (Vector2.down * boxSize.y);
+			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
+#endif
+
+			return hit;
 		}
 
 		private void UpdateAnimation()
@@ -225,7 +300,7 @@ namespace Game
 
 		private void UpdateMovement()
 		{
-			float xVelocity = 0.0f;
+			Vector2 velocity = _rigidBody.velocity;
 
 			if ((Mathf.Abs(_moveVector.x) > _deadzone) && !IsCrouching)
 			{
@@ -236,45 +311,24 @@ namespace Game
 				}
 
 				// Apply movent requested via input
-				xVelocity = ((_moveVector.x > 0.0f) ? 1.0f : -1.0f) * speed;
+				velocity.x = ((_moveVector.x > 0.0f) ? 1.0f : -1.0f) * speed;
 			}
 			else if (IsOnGround)
 			{
 				// Lerp towards stationary, simulating inertia
-				xVelocity = Mathf.Lerp(
+				velocity.x = Mathf.Lerp(
 					_rigidBody.velocity.x,
 					0.0f,
 					_inertiaDecay);
 				const float epsilon = 0.1f;
 
-				if (Mathf.Abs(xVelocity) <= epsilon)
+				if (Mathf.Abs(velocity.x) <= epsilon)
 				{
-					xVelocity = 0.0f;
+					velocity.x = 0.0f;
 				}
 			}
 
-			// Remove airborne velocity into a wall
-			if (OnWall && !IsOnGround)
-			{
-				xVelocity = ClampVelocityIntoWall(_contactFlags, xVelocity);
-			}
-
-			_rigidBody.velocity = _rigidBody.velocity.WithX(xVelocity);
-		}
-
-		private static float ClampVelocityIntoWall(Flags32<ContactFlags> contactFlags, float xVelocity)
-		{
-			if (contactFlags.TestAny(ContactFlags.LeftWall) && (xVelocity < 0.0f))
-			{
-				return 0.0f;
-			}
-
-			if (contactFlags.TestAny(ContactFlags.RightWall) && (xVelocity > 0.0f))
-			{
-				return 0.0f;
-			}
-
-			return xVelocity;
+			_rigidBody.velocity = velocity;
 		}
 
 		private void UpdateJump()
@@ -313,30 +367,6 @@ namespace Game
 			{
 				_transform.position = _spawnPos;
 				_rigidBody.velocity = Vector2.zero;
-			}
-		}
-
-		private Flags32<ContactFlags> GetContactFlags(ContactPoint2D contact)
-		{
-			Flags32<ContactFlags> result = ContactFlags.Unknown;
-
-			float dot = Vector3.Dot(Vector2.up, contact.normal);
-			
-			const float degrees45 = 45.0f;
-			const float radians45 = degrees45 * Mathf.Deg2Rad;
-			const float radians135 = radians45 + (90.0f * Mathf.Deg2Rad);
-
-			if (dot > Mathf.Cos(radians45))
-			{
-				return ContactFlags.Ground;
-			}
-			else if (dot < Mathf.Cos(radians135))
-			{
-				return ContactFlags.Ceiling;
-			}
-			else
-			{
-				return ((contact.normal.x > 0.0f) ? ContactFlags.LeftWall : ContactFlags.RightWall);
 			}
 		}
 	}

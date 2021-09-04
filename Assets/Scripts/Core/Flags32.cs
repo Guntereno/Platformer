@@ -27,18 +27,6 @@ namespace Momo.Core
 			return ((Flags & flags.Flags) != 0);
 		}
 
-
-
-
-
-
-
-
-
-
-
-
-
 		public void Set(Flags32<TEnum> flagsToSet)
 		{
 			Flags |= flagsToSet.Flags;
