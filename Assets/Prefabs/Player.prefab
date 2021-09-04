@@ -55,7 +55,7 @@ MonoBehaviour:
   _jumpImpulse: 15
   _fallFactor: 2
   _lowJumpFactor: 1.2
-  _coyoteTime: 0.15
+  _coyoteTime: 0.1
   _currentGun: {fileID: 0}
 --- !u!50 &2619971862393951112
 Rigidbody2D:

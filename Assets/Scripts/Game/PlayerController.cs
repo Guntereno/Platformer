@@ -165,11 +165,14 @@ namespace Game
 			_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
 			_animator.SetBool(_animIsCrouchingId, IsCrouching);
 
-			if (_rigidBody.velocity.x > 0.0f)
+			// Miniscule movements, such as being pushed out of a contact, shouldn't make the
+			// character change direction
+			const float walkEpsilon = 0.5f;
+			if (_rigidBody.velocity.x > walkEpsilon)
 			{
 				_transform.localScale = _transform.localScale.WithX(1.0f);
 			}
-			else if (_rigidBody.velocity.x < 0.0f)
+			else if (_rigidBody.velocity.x < -walkEpsilon)
 			{
 				_transform.localScale = _transform.localScale.WithX(-1.0f);
 			}

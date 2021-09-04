@@ -45,7 +45,8 @@ namespace Game.Guns
 
 			projectile.transform.position = _muzzle.position;
 			projectile.gameObject.SetActive(true);
-			Vector2 velocity = _muzzle.TransformDirection(_muzzle.right) * _projectileSpeed;
+			Vector2 velocity = 
+				_muzzle.TransformDirection(_muzzle.right) * _projectileSpeed;
 			projectile.Spawn(velocity, _projectileLifeSpan);
 
 			_lastFired = Time.time;
