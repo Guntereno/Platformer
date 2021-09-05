@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
-
-using Random = Core.Random;
+using Core.Audio;
 
 namespace Game.Guns
 {
 	[RequireComponent(typeof(AudioSource))]
+	[RequireComponent(typeof(RandomAudioClipPool))]
 	class Gun : Weapon
 	{
 		[SerializeField] private float _cooldownTime = 0.0f;
@@ -19,27 +19,15 @@ namespace Game.Guns
 		private float _lastFired = float.MinValue;
 
 		private AudioSource _audioSource = null;
+		private RandomAudioClipPool _audioPool = null;
 
-		// TODO: Move random ordering of samples to its own file
-		[SerializeField] private AudioClip[] _audioClips = null;
-		private System.Random _random = new System.Random();
-		private int[] _audioClipOrder = null;
-		private int[] _audioClipSelectionPool = null;
-		private int _currentAudioClipIndex = 0;
 
 		private bool OnCooldown => (Time.time - _lastFired) < _cooldownTime;
 
 		private void Awake()
 		{
 			_audioSource = GetComponent<AudioSource>();
-
-			int numClips = _audioClips.Length;
-			_audioClipOrder = new int[numClips];
-			_audioClipSelectionPool = new int[numClips];
-			for(int i=0; i<numClips; ++i)
-			{
-				_audioClipOrder[i] = i;
-			}
+			_audioPool = GetComponent<RandomAudioClipPool>();
 
 			_projectilePool = new Projectile[_maxLiveProjectiles];
 			for(int i=0; i<_maxLiveProjectiles; ++i)
@@ -49,21 +37,7 @@ namespace Game.Guns
 			}
 		}
 
-		private void ShuffleAudioClips()
-		{
-			_currentAudioClipIndex = 0;
-			Random.Shuffle<int>(_random, _audioClipOrder, _audioClipSelectionPool);
-		}
 
-		private AudioClip NextAudioClip()
-		{
-			if(_currentAudioClipIndex >= _audioClips.Length)
-			{
-				ShuffleAudioClips();
-			}
-
-			return _audioClips[_audioClipOrder[_currentAudioClipIndex++]];
-		}
 
 		public override void OnFire(bool firePressed, out Vector2 recoil)
 		{
@@ -99,7 +73,7 @@ namespace Game.Guns
 
 			if(_audioSource != null)
 			{
-				_audioSource.clip = NextAudioClip();
+				_audioSource.clip = _audioPool.Next();
 				_audioSource.Play();
 			}
 		}
