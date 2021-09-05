@@ -17,9 +17,23 @@ namespace Game
 
 		[SerializeField] bool _scrollY;
 
+		[SerializeField] float _recoilLerpParam;
+		[SerializeField] float _recoilFactor;
+		
+		float _depthPlane;
+		Vector2 _dollyPosition;
+		Vector2 _recoilOffset;
+
 		private float _initialY = 0.0f;
 
 		bool _headingRight = true;
+
+
+		public void ShotFired(Vector2 velocity)
+		{
+			_recoilOffset += -(velocity) * _recoilFactor;
+		}
+
 
 		private Camera _camera;
 		private Camera Camera
@@ -37,6 +51,8 @@ namespace Game
 		private void Start()
 		{
 			_initialY = transform.position.y;
+			_dollyPosition = transform.position;
+			_depthPlane = transform.position.z;
 		}
 
 		void Update()
@@ -86,10 +102,14 @@ namespace Game
 				}
 			}
 
-			transform.position = Vector3.Lerp(
-				transform.position,
+			_dollyPosition = Vector3.Lerp(
+				_dollyPosition,
 				cameraTarget,
 				_cameraLerpParam);
+
+			_recoilOffset = Vector2.Lerp(_recoilOffset, Vector2.zero, _recoilLerpParam);
+
+			transform.position = ((Vector3)(_dollyPosition + _recoilOffset)).WithZ(_depthPlane);
 		}
 
 		private void GetHorizontalBounds(out float min, out float max)

@@ -16,7 +16,10 @@ namespace Game
 		Right = 1 << 1
 	}
 
-	[RequireComponent(typeof(Animator), typeof(Collider), typeof(Rigidbody2D))]
+	[RequireComponent(typeof(Animator))]
+	[RequireComponent(typeof(CapsuleCollider2D))]
+	[RequireComponent(typeof(CircleCollider2D))]
+	[RequireComponent(typeof(Rigidbody2D))]
 	public class PlayerController : MonoBehaviour
 	{
 		[Flags]
@@ -25,9 +28,9 @@ namespace Game
 			None = 0,
 
 			Unknown = 1 << 0,
-			RightWall = 1 << 1,
-			Ground = 1 << 2,
-			LeftWall = 1 << 3
+			OnGround = 1 << 1,
+			OnRightWall = 1 << 2,
+			OnLeftWall = 1 << 3
 		}
 
 		[Flags]
@@ -37,11 +40,13 @@ namespace Game
 
 			Jump = 1 << 0,
 			Run = 1 << 1,
-			Crouch = 1 << 2
+			Crouch = 1 << 2,
+			Fire = 1 << 3
 		}
 
 		[SerializeField] private Animator _animator = null;
-		[SerializeField] private CapsuleCollider2D _collider = null;
+		[SerializeField] private CapsuleCollider2D _bodyCollider = null;
+		[SerializeField] private CircleCollider2D _feetCollider = null;
 		[SerializeField] private Rigidbody2D _rigidBody = null;
 
 		[SerializeField] private float _deadzone = 0.2f;
@@ -56,21 +61,21 @@ namespace Game
 		[SerializeField] private float _contectCheckDistance = 0.1f;
 
 		[SerializeField] private Weapon _currentGun = null;
+		[SerializeField] private float _crouchRecoilFactor = 0.5f;
 
 		private Vector2 _spawnPos = default;
 		private Transform _transform = null;
 
-		private float _capsuleBoxWidth;
-		private float _capsuleBoxHeight;
-		private float _capsuleCircleOffset;
-		private float _capsuleCircleRadius;
+		private float _bodyBoxWidth;
+		private float _bodyBoxHeight;
 
 		private int _animIsOnGroundId;
 		private int _animSpeedX;
 		private int _animVelocityYId;
 		private int _animIsCrouchingId;
 
-		private int _raycastMask;
+		private int _groundAndPropsMask;
+		private int _groundMask;
 
 		private Vector2 _moveVector = default;
 		private Flags32<InputFlags> _inputFlags = InputFlags.None;
@@ -93,13 +98,19 @@ namespace Game
 			set => _inputFlags.Assign(InputFlags.Crouch, value);
 		}
 
+		private bool FireHeld
+		{
+			get => _inputFlags.TestAll(InputFlags.Fire);
+			set => _inputFlags.Assign(InputFlags.Fire, value);
+		}
+
 		private Flags32<ContactFlags> _contactFlags = ContactFlags.None;
 		private float _lastTimeOnGround = float.MinValue;
 
 		private readonly PlayerCollisionFlags CollisionFlags;
 
-		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.Ground);
-		public bool OnWall => _contactFlags.TestAny(ContactFlags.LeftWall | ContactFlags.RightWall);
+		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.OnGround);
+		public bool OnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
 		public bool IsCrouching => IsOnGround && CrouchHeld;
 
 		public Vector2 Position => _transform.position;
@@ -111,15 +122,13 @@ namespace Game
 			_transform = transform;
 			_rigidBody = GetComponent<Rigidbody2D>();
 
-			if(_collider.size.x > _collider.size.y)
+			if (_bodyCollider.size.x > _bodyCollider.size.y)
 			{
 				throw new Exception("Collider should be taller than it is wide!");
 			}
 
-			_capsuleBoxWidth = _collider.size.x;
-			_capsuleBoxHeight = (_collider.size.y - _collider.size.x);
-			_capsuleCircleOffset = _capsuleBoxHeight * 0.5f;
-			_capsuleCircleRadius = _capsuleBoxWidth * 0.5f;
+			_bodyBoxWidth = _bodyCollider.size.x;
+			_bodyBoxHeight = (_bodyCollider.size.y - _bodyCollider.size.x);
 
 			_spawnPos = _transform.position;
 
@@ -128,7 +137,8 @@ namespace Game
 			_animVelocityYId = Animator.StringToHash("VelocityY");
 			_animIsCrouchingId = Animator.StringToHash("IsCrouching");
 
-			_raycastMask = LayerMask.GetMask("Ground", "Props");
+			_groundAndPropsMask = LayerMask.GetMask("Ground", "Props");
+			_groundMask = LayerMask.GetMask("Ground");
 		}
 
 		private void FixedUpdate()
@@ -137,6 +147,7 @@ namespace Game
 
 			UpdateFallDeath();
 		}
+
 
 		private void Update()
 		{
@@ -147,7 +158,10 @@ namespace Game
 
 			UpdateMovement();
 			UpdateJump();
+			UpdateFiring();
 			UpdateAnimation();
+
+			DebugDrawCollisionChecks();
 		}
 
 		void OnGUI()
@@ -158,103 +172,123 @@ namespace Game
 #endif
 		}
 
+		#endregion
+
 		private Flags32<ContactFlags> CheckForContact()
 		{
 			Flags32<ContactFlags> result = ContactFlags.None;
 
-			if(ContactCapCheck(Vector2.down))
+			if (GroundCheck())
 			{
-				result.Set(ContactFlags.Ground);
+				result.Set(ContactFlags.OnGround);
 			}
 
-			RaycastHit2D rightHit = ContactSideCheck(Vector2.right);
-			if(rightHit)
+			RaycastHit2D rightHit = ContactWallCheck(Vector2.right);
+			if (rightHit)
 			{
-				result.Set(ContactFlags.RightWall);
+				result.Set(ContactFlags.OnRightWall);
 			}
 
-			RaycastHit2D leftHit = ContactSideCheck(Vector2.left);
+			RaycastHit2D leftHit = ContactWallCheck(Vector2.left);
 			if (leftHit)
 			{
-				result.Set(ContactFlags.LeftWall);
+				result.Set(ContactFlags.OnLeftWall);
 			}
 
 			return result;
 		}
 
-		private RaycastHit2D ContactCapCheck(Vector2 dir)
+		private struct GroundCheckParams
 		{
-			if (Mathf.Abs(dir.x) > 0.0f)
-			{
-				throw new Exception("Cap checks must be vertical!");
-			}
+			public Vector2 Origin;
+			public float Radius;
+		}
 
-			Vector2 origin = (Vector2)_transform.position + (dir * _capsuleCircleOffset);
+		private GroundCheckParams BuildGroundCheckParams()
+		{
+			GroundCheckParams result;
+			result.Origin = (Vector2)_transform.position + _feetCollider.offset;
+			result.Radius = _feetCollider.radius;
+			return result;
+		}
 
-			float radius = _capsuleCircleRadius;
-			RaycastHit2D hit = Physics2D.CircleCast(origin, radius, Vector2.down, _contectCheckDistance, _raycastMask);
-
-#if UNITY_EDITOR
-			bool hitOccured = (hit.collider != null);
-			Vector2 startDir = dir.PerpendicularR();
-			float startTheta = Mathf.Atan2(startDir.y, startDir.x);
-			Vector2 arcCenter = origin + (dir * _contectCheckDistance);
-			DebugDraw.Arc(arcCenter, startTheta, Mathf.PI, radius, (hitOccured ? Color.green : Color.grey));
-#endif
+		private RaycastHit2D GroundCheck()
+		{
+			GroundCheckParams checkParams = BuildGroundCheckParams();
+			RaycastHit2D hit = Physics2D.CircleCast(
+				checkParams.Origin, checkParams.Radius, Vector2.down,
+				_contectCheckDistance, _groundAndPropsMask);
 
 			return hit;
 		}
 
-		private RaycastHit2D ContactSideCheck(Vector2 dir)
+		private struct WallCheckParams
 		{
-			if(Mathf.Abs(dir.y) > 0.0f)
+			public Vector2 BoxSize;
+			public Vector2 Origin;
+		}
+
+		private WallCheckParams BuildWallCheckParams(Vector2 dir)
+		{
+			if (Mathf.Abs(dir.y) > 0.0f)
 			{
 				throw new Exception("Side checks must be horizontal!");
 			}
 
-			Vector2 boxSize = new Vector2(_capsuleBoxWidth * 0.5f, _capsuleBoxHeight);
-			Vector2 origin = (Vector2)_transform.position + (dir * (boxSize.x * 0.5f));
+			WallCheckParams result;
+			result.BoxSize = new Vector2(_bodyBoxWidth * 0.5f, _bodyBoxHeight);
+			result.Origin =
+				(Vector2)_transform.position
+				+ (dir * (result.BoxSize.x * 0.5f));
+			return result;
+		}
+
+		private RaycastHit2D ContactWallCheck(Vector2 dir)
+		{
+			WallCheckParams checkParams = BuildWallCheckParams(dir);
 
 			RaycastHit2D hit = Physics2D.BoxCast(
-				origin, boxSize, 
-				angle:0.0f,
+				checkParams.Origin, checkParams.BoxSize,
+				angle: 0.0f,
 				dir,
-				distance:_contectCheckDistance,
-				layerMask:_raycastMask);
-
-#if UNITY_EDITOR
-			bool hitOccured = (hit.collider != null);
-			Vector2 start = origin + (dir * ((boxSize.x * 0.5f) + _contectCheckDistance));
-			start.y += boxSize.y * 0.5f;
-			Vector2 end = start + (Vector2.down * boxSize.y);
-			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
-#endif
+				distance: _contectCheckDistance,
+				layerMask: _groundMask);
 
 			return hit;
 		}
 
-		private void UpdateAnimation()
+		private void DebugDrawCollisionChecks()
 		{
-			_animator.SetBool(_animIsOnGroundId, IsOnGround || IsInCoyoteTime);
-			_animator.SetFloat(_animSpeedX, Mathf.Abs(_rigidBody.velocity.x) / (_speed * _runFactor));
-			_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
-			_animator.SetBool(_animIsCrouchingId, IsCrouching);
-
-			// Miniscule movements, such as being pushed out of a contact, shouldn't make the
-			// character change direction
-			const float walkEpsilon = 0.5f;
-			if (_rigidBody.velocity.x > walkEpsilon)
-			{
-				_transform.localScale = _transform.localScale.WithX(1.0f);
-			}
-			else if (_rigidBody.velocity.x < -walkEpsilon)
-			{
-				_transform.localScale = _transform.localScale.WithX(-1.0f);
-			}
+#if UNITY_EDITOR
+			DebugDrawGroundCheck(_contactFlags.TestAll(ContactFlags.OnGround));
+			DebugDrawWallCheck(Vector2.left, _contactFlags.TestAll(ContactFlags.OnLeftWall));
+			DebugDrawWallCheck(Vector2.right, _contactFlags.TestAll(ContactFlags.OnRightWall));
+#endif
 		}
 
-		#endregion
+		private void DebugDrawGroundCheck(bool hitOccured)
+		{
+			GroundCheckParams checkParams = BuildGroundCheckParams();
 
+			float startTheta = Mathf.PI;
+			Vector2 arcCenter = checkParams.Origin + (Vector2.down * _contectCheckDistance);
+			DebugDraw.Arc(
+				arcCenter,
+				startTheta,
+				Mathf.PI,
+				checkParams.Radius,
+				(hitOccured ? Color.green : Color.grey));
+		}
+
+		private void DebugDrawWallCheck(Vector2 dir, bool hitOccured)
+		{
+			WallCheckParams checkParams = BuildWallCheckParams(dir);
+
+			Vector2 start = checkParams.Origin + (dir * ((checkParams.BoxSize.x * 0.5f) + _contectCheckDistance));
+			start.y += checkParams.BoxSize.y * 0.5f;
+			Vector2 end = start + (Vector2.down * checkParams.BoxSize.y);
+			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
+		}
 
 		#region Input Callbacks
 
@@ -289,10 +323,7 @@ namespace Game
 
 		private void OnFire(InputValue input)
 		{
-			if (_currentGun != null)
-			{
-				_currentGun.OnFire(input.Get<float>() > 0.0f);
-			}
+			FireHeld = (input.Get<float>() > 0.0f);
 		}
 
 		#endregion
@@ -328,9 +359,59 @@ namespace Game
 				}
 			}
 
+			velocity.x = ClampVelocityIntoWall(_contactFlags, velocity.x);
+
 			_rigidBody.velocity = velocity;
 		}
 
+		private void UpdateAnimation()
+		{
+			_animator.SetBool(_animIsOnGroundId, IsOnGround || IsInCoyoteTime);
+			_animator.SetFloat(_animSpeedX, Mathf.Abs(_rigidBody.velocity.x) / (_speed * _runFactor));
+			_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
+			_animator.SetBool(_animIsCrouchingId, IsCrouching);
+
+			if(!FireHeld)
+			{
+				if (_moveVector.x > 0)
+				{
+					_transform.localScale = _transform.localScale.WithX(1.0f);
+				}
+				else if (_moveVector.x < 0)
+				{
+					_transform.localScale = _transform.localScale.WithX(-1.0f);
+				}
+			}
+		}
+
+		private void UpdateFiring()
+		{
+			if (_currentGun != null)
+			{
+				_currentGun.OnFire(FireHeld, out Vector2 recoil);
+
+				if(IsCrouching)
+				{
+					recoil *= _crouchRecoilFactor;
+				}
+
+				_rigidBody.AddForce(recoil, ForceMode2D.Impulse);
+			}
+		}
+
+		private static float ClampVelocityIntoWall(Flags32<ContactFlags> contactFlags, float xVelocity)
+		{
+			if (contactFlags.TestAny(ContactFlags.OnLeftWall) && (xVelocity < 0.0f))
+			{
+				return 0.0f;
+			}
+			else if (contactFlags.TestAny(ContactFlags.OnRightWall) && (xVelocity > 0.0f))
+			{
+				return 0.0f;
+			}
+
+			return xVelocity;
+		}
 		private void UpdateJump()
 		{
 			// Ensure character falls faster than when rising
