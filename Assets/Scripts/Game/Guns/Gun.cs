@@ -8,7 +8,8 @@ namespace Game.Guns
 	[RequireComponent(typeof(RandomAudioClipPool))]
 	class Gun : Weapon
 	{
-		[SerializeField] private Transform _sprite = null;
+		[SerializeField] private Transform _gunSprite = null;
+		[SerializeField] private GameObject _muzzleFlash = null;
 		[SerializeField] private float _cooldownTime = 0.0f;
 		[SerializeField] private Projectile _projectilePrefab = null;
 		[SerializeField] private int _maxLiveProjectiles = 0;
@@ -39,19 +40,28 @@ namespace Game.Guns
 				_projectilePool[i] = GameObject.Instantiate(_projectilePrefab);
 				_projectilePool[i].gameObject.SetActive(false);
 			}
+
+			_muzzleFlash.SetActive(false);
 		}
 
 		private IEnumerator RecoilCoroutine()
-		{ 
+		{
+			_muzzleFlash.SetActive(true);
+
+			int muzzleFrames = 2;
+
 			float recoilTime;
 			do
 			{
 				recoilTime = Mathf.Clamp(Time.time - _lastFired, 0.0f, _spriteRecoilTime);
+
 				float distance =
 					(1.0f - (recoilTime / _spriteRecoilTime))
 					* _spriteRecoilDistance;
-				_sprite.transform.localPosition = Vector2.left * distance;
+				_gunSprite.transform.localPosition = Vector2.left * distance;
 				yield return 0;
+
+				_muzzleFlash.SetActive(--muzzleFrames > 0);
 			}
 			while(recoilTime < _spriteRecoilTime);
 
@@ -85,7 +95,7 @@ namespace Game.Guns
 
 			_lastFired = Time.time;
 
-			_sprite.localPosition = recoil;
+			_gunSprite.localPosition = recoil;
 
 			if (_audioSource != null)
 			{
