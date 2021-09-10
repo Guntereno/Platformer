@@ -38,30 +38,23 @@ namespace Game.Guns
 		}
 
 
-
-		public override void OnFire(bool firePressed, out Vector2 recoil)
+		public override bool OnFire(bool fireHeld, out Vector2 recoil)
 		{
-			if(firePressed && !OnCooldown)
+			recoil = Vector2.zero;
+			if (!fireHeld || OnCooldown)
 			{
-				Fire(out recoil);
-				return;
+				return false;
 			}
 
-			recoil = Vector2.zero;
-		}
-
-		private void Fire(out Vector2 recoil)
-		{
 			Projectile projectile = GetNextAvailableProjectile();
-			if(projectile == null)
+			if (projectile == null)
 			{
-				recoil = Vector2.zero;
-				return;
+				return false;
 			}
 
 			projectile.transform.position = _muzzle.position;
 			projectile.gameObject.SetActive(true);
-			Vector2 velocity = 
+			Vector2 velocity =
 				_muzzle.TransformDirection(_muzzle.right) * _projectileSpeed;
 			projectile.Spawn(velocity, _projectileLifeSpan);
 
@@ -71,11 +64,13 @@ namespace Game.Guns
 
 			_lastFired = Time.time;
 
-			if(_audioSource != null)
+			if (_audioSource != null)
 			{
 				_audioSource.clip = _audioPool.Next();
 				_audioSource.Play();
 			}
+
+			return true;
 		}
 
 		private Projectile GetNextAvailableProjectile()

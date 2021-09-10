@@ -5868,14 +5868,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1079407549230831803, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: m_Radius
-      value: 0.36
-      objectReference: {fileID: 0}
-    - target: {fileID: 1079407549230831803, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: m_Offset.y
-      value: -0.36
-      objectReference: {fileID: 0}
     - target: {fileID: 2619971862393951115, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -5928,26 +5920,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 890058461}
-    - target: {fileID: 8573154131504116638, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: _audioClips.Array.size
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 8573154131504116638, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: _audioClips.Array.data[0]
-      value: 
-      objectReference: {fileID: 8300000, guid: e8b8fc57fb0a72d45b4a6b39cd4de9b6, type: 3}
-    - target: {fileID: 8573154131504116638, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: _audioClips.Array.data[1]
-      value: 
-      objectReference: {fileID: 8300000, guid: 848c74d50f3b0c44cbf046a64c467ffa, type: 3}
-    - target: {fileID: 8573154131504116638, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: _audioClips.Array.data[2]
-      value: 
-      objectReference: {fileID: 8300000, guid: a9fcb0a8e97cd2c49997e201901d15e8, type: 3}
-    - target: {fileID: 8573154131504116638, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: _audioClips.Array.data[3]
-      value: 
-      objectReference: {fileID: 8300000, guid: 2661f83f78c49dd46ab0dfeafd4b2879, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
 --- !u!1001 &8183807613933445188

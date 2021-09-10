@@ -101,9 +101,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cooldownTime: 0.2
   _projectilePrefab: {fileID: 4934886322839379330, guid: 231c94bd797b9544fb5c0f0785514b6a, type: 3}
-  _maxLiveProjectiles: 6
+  _maxLiveProjectiles: 3
   _muzzle: {fileID: 3846182257398139199}
-  _projectileLifeSpan: 0.2
+  _projectileLifeSpan: 0.4
   _projectileSpeed: 30
   _recoilFactor: 0.1
 --- !u!82 &9217297243297710121

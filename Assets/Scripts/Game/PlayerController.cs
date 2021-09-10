@@ -288,7 +288,8 @@ namespace Game
 			{
 				Debug.DrawRay(contact.point, contact.normal, Color.green);
 
-				bool isGround = (contact.normal.y > 0.0f);
+				float upDotNorm = Vector2.Dot(Vector2.up, contact.normal);
+				bool isGround = (contact.normal.y > 0.7f);
 				if(isGround)
 				{
 					if(contact.normal.x > _groundNormalLeft.x)
@@ -401,7 +402,7 @@ namespace Game
 				}
 
 				// Apply movent requested via input
-				// Ensure accelleration is applied in direction of the ground, to allow climbing of slopes
+				// Ensure accelleration is applied in direction of the ground, to help climbing of slopes
 				moveForce = ((_moveVector.x > 0.0f) ? GroundDirectionRight : GroundDirectionLeft) * acceleration;
 			}
 
@@ -476,14 +477,17 @@ namespace Game
 		{
 			if (_currentGun != null)
 			{
-				_currentGun.OnFire(FireHeld, out Vector2 recoil);
+				bool weaponDischarged = _currentGun.OnFire(FireHeld, out Vector2 recoil);
 
-				if(IsCrouching)
+				if(weaponDischarged)
 				{
-					recoil *= _crouchRecoilFactor;
-				}
+					if (IsCrouching)
+					{
+						recoil *= _crouchRecoilFactor;
+					}
 
-				_rigidBody.AddForce(recoil, ForceMode2D.Impulse);
+					_rigidBody.AddForce(recoil, ForceMode2D.Impulse);
+				}
 			}
 		}
 
