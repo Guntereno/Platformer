@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Core.Audio;
+using System.Collections;
 
 namespace Game.Guns
 {
@@ -7,6 +8,7 @@ namespace Game.Guns
 	[RequireComponent(typeof(RandomAudioClipPool))]
 	class Gun : Weapon
 	{
+		[SerializeField] private Transform _sprite = null;
 		[SerializeField] private float _cooldownTime = 0.0f;
 		[SerializeField] private Projectile _projectilePrefab = null;
 		[SerializeField] private int _maxLiveProjectiles = 0;
@@ -14,13 +16,15 @@ namespace Game.Guns
 		[SerializeField] private float _projectileLifeSpan = 1.0f;
 		[SerializeField] private float _projectileSpeed = 1.0f;
 		[SerializeField] private float _recoilFactor = 0.1f;
+		[SerializeField] private float _spriteRecoilDistance = 0.1f;
+		[SerializeField] private float _spriteRecoilTime = 0.1f;
 
 		private Projectile[] _projectilePool = null;
 		private float _lastFired = float.MinValue;
 
 		private AudioSource _audioSource = null;
 		private RandomAudioClipPool _audioPool = null;
-
+		private Coroutine _recoilCoroutine;
 
 		private bool OnCooldown => (Time.time - _lastFired) < _cooldownTime;
 
@@ -35,6 +39,23 @@ namespace Game.Guns
 				_projectilePool[i] = GameObject.Instantiate(_projectilePrefab);
 				_projectilePool[i].gameObject.SetActive(false);
 			}
+		}
+
+		private IEnumerator RecoilCoroutine()
+		{ 
+			float recoilTime;
+			do
+			{
+				recoilTime = Mathf.Clamp(Time.time - _lastFired, 0.0f, _spriteRecoilTime);
+				float distance =
+					(1.0f - (recoilTime / _spriteRecoilTime))
+					* _spriteRecoilDistance;
+				_sprite.transform.localPosition = Vector2.left * distance;
+				yield return 0;
+			}
+			while(recoilTime < _spriteRecoilTime);
+
+			_recoilCoroutine = null;
 		}
 
 
@@ -64,11 +85,19 @@ namespace Game.Guns
 
 			_lastFired = Time.time;
 
+			_sprite.localPosition = recoil;
+
 			if (_audioSource != null)
 			{
 				_audioSource.clip = _audioPool.Next();
 				_audioSource.Play();
 			}
+
+			if(_recoilCoroutine != null)
+			{
+				StopCoroutine(_recoilCoroutine);
+			}
+			_recoilCoroutine = StartCoroutine(RecoilCoroutine());
 
 			return true;
 		}
