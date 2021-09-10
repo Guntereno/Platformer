@@ -50,9 +50,9 @@ namespace Game
 		[SerializeField] private Rigidbody2D _rigidBody = null;
 
 		[SerializeField] private float _deadzone = 0.2f;
-		[SerializeField] private float _speed = 1.0f;
+		[SerializeField] private float _maxSpeed = 1.0f;
+		[SerializeField] private float _acceleration = 1.0f;
 		[SerializeField] private float _runFactor = 1.5f;
-		[SerializeField] private float _inertiaDecay = 0.1f;
 
 		[SerializeField] private float _jumpImpulse = 4.0f;
 		[SerializeField] private float _fallFactor = 0.0f;
@@ -61,6 +61,7 @@ namespace Game
 		[SerializeField] private float _contectCheckDistance = 0.1f;
 
 		[SerializeField] private Weapon _currentGun = null;
+
 		[SerializeField] private float _crouchRecoilFactor = 0.5f;
 
 		private Vector2 _spawnPos = default;
@@ -77,8 +78,12 @@ namespace Game
 		private int _groundAndPropsMask;
 		private int _groundMask;
 
+		private Vector2 _groundNormalLeft;
+		private Vector2 _groundNormalRight;
+
 		private Vector2 _moveVector = default;
-		private Flags32<InputFlags> _inputFlags = InputFlags.None;
+
+ 		private Flags32<InputFlags> _inputFlags = InputFlags.None;
 
 		private bool JumpHeld
 		{
@@ -115,6 +120,10 @@ namespace Game
 
 		public Vector2 Position => _transform.position;
 
+		private Vector2 GroundDirectionLeft => Vector2.Perpendicular(_groundNormalLeft);
+		private Vector2 GroundDirectionRight => -Vector2.Perpendicular(_groundNormalRight);
+
+
 		#region Unity Callbacks
 
 		private void Start()
@@ -145,9 +154,20 @@ namespace Game
 		{
 			_contactFlags = CheckForContact();
 
-			UpdateFallDeath();
+			FixedUpdateVelocity();
+
+			ResetGroundNormals();
 		}
 
+		private void OnCollisionEnter2D(Collision2D collision)
+		{
+			HandleGroundContacts(collision);
+		}
+
+		private void OnCollisionStay2D(Collision2D collision)
+		{
+			HandleGroundContacts(collision);
+		}
 
 		private void Update()
 		{
@@ -156,12 +176,12 @@ namespace Game
 				_lastTimeOnGround = Time.time;
 			}
 
-			UpdateMovement();
-			UpdateJump();
 			UpdateFiring();
 			UpdateAnimation();
+			UpdateFallDeath();
 
 			DebugDrawCollisionChecks();
+			DebugDrawGroundNormals();
 		}
 
 		void OnGUI()
@@ -257,12 +277,51 @@ namespace Game
 			return hit;
 		}
 
+		private void ResetGroundNormals()
+		{
+			_groundNormalLeft = _groundNormalRight = Vector2.up;
+		}
+
+		private void HandleGroundContacts(Collision2D collision)
+		{
+			foreach (ContactPoint2D contact in collision.contacts)
+			{
+				Debug.DrawRay(contact.point, contact.normal, Color.green);
+
+				bool isGround = (contact.normal.y > 0.0f);
+				if(isGround)
+				{
+					if(contact.normal.x > _groundNormalLeft.x)
+					{
+						_groundNormalLeft = contact.normal;
+					}
+
+					if(contact.normal.x < _groundNormalRight.x)
+					{
+						_groundNormalRight = contact.normal;
+					}
+				}
+			}
+		}
+
 		private void DebugDrawCollisionChecks()
 		{
 #if UNITY_EDITOR
 			DebugDrawGroundCheck(_contactFlags.TestAll(ContactFlags.OnGround));
 			DebugDrawWallCheck(Vector2.left, _contactFlags.TestAll(ContactFlags.OnLeftWall));
 			DebugDrawWallCheck(Vector2.right, _contactFlags.TestAll(ContactFlags.OnRightWall));
+#endif
+		}
+
+		private void DebugDrawGroundNormals()
+		{
+#if UNITY_EDITOR
+			Vector2 groundNormalStart = (Vector2)_transform.position
+				+ _bodyCollider.offset
+				- (_bodyCollider.size * 0.5f).WithX(0.0f);
+
+			Debug.DrawLine(groundNormalStart, groundNormalStart + GroundDirectionLeft, Color.cyan);
+			Debug.DrawLine(groundNormalStart, groundNormalStart + GroundDirectionRight, Color.cyan);
 #endif
 		}
 
@@ -305,7 +364,7 @@ namespace Game
 			bool wasHeld = JumpHeld;
 			if (canJump && (!wasHeld && isHeld))
 			{
-				ApplyJumpImpuse();
+				_rigidBody.AddForce(new Vector2(0.0f, _jumpImpulse), ForceMode2D.Impulse);
 			}
 
 			JumpHeld = isHeld;
@@ -329,45 +388,74 @@ namespace Game
 		#endregion
 
 
-		private void UpdateMovement()
+		private void FixedUpdateVelocity()
 		{
-			Vector2 velocity = _rigidBody.velocity;
+			Vector2 moveForce = Vector2.zero;
 
 			if ((Mathf.Abs(_moveVector.x) > _deadzone) && !IsCrouching)
 			{
-				float speed = _speed;
+				float acceleration = _acceleration;
 				if (RunHeld)
 				{
-					speed *= _runFactor;
+					acceleration *= _runFactor;
 				}
 
 				// Apply movent requested via input
-				velocity.x = ((_moveVector.x > 0.0f) ? 1.0f : -1.0f) * speed;
+				// Ensure accelleration is applied in direction of the ground, to allow climbing of slopes
+				moveForce = ((_moveVector.x > 0.0f) ? GroundDirectionRight : GroundDirectionLeft) * acceleration;
 			}
-			else if (IsOnGround)
+
+			moveForce = ClampIntoWall(_contactFlags, moveForce);
+
+			Vector2 velocity = _rigidBody.velocity + moveForce;
+
+			// Ensure character falls faster than when rising
+			if (velocity.y < 0.0f)
 			{
-				// Lerp towards stationary, simulating inertia
-				velocity.x = Mathf.Lerp(
-					_rigidBody.velocity.x,
-					0.0f,
-					_inertiaDecay);
-				const float epsilon = 0.1f;
-
-				if (Mathf.Abs(velocity.x) <= epsilon)
-				{
-					velocity.x = 0.0f;
-				}
+				velocity += Physics2D.gravity * _fallFactor;
+			}
+			// Ensure character falls faster if they're not holding the
+			// jump button
+			else if ((velocity.y > 0.0f) && !JumpHeld)
+			{
+				velocity += Physics2D.gravity * _lowJumpFactor;
 			}
 
-			velocity.x = ClampVelocityIntoWall(_contactFlags, velocity.x);
+			velocity = new Vector2(
+				Mathf.Clamp(velocity.x, -_maxSpeed, _maxSpeed),
+				Mathf.Clamp(velocity.y, -_maxSpeed, _maxSpeed));
 
 			_rigidBody.velocity = velocity;
 		}
 
+		private static Vector2 ClampIntoWall(Flags32<ContactFlags> contactFlags, Vector2 force)
+		{
+			if (contactFlags.TestAny(ContactFlags.OnLeftWall) && (force.x < 0.0f))
+			{
+				force.x = 0.0f;
+			}
+			else if (contactFlags.TestAny(ContactFlags.OnRightWall) && (force.x > 0.0f))
+			{
+				force.x = 0.0f;
+			}
+
+			return force;
+		}
+
 		private void UpdateAnimation()
 		{
+			float runSpeed = 0.0f;
+			if(Mathf.Abs(_moveVector.x) > _deadzone)
+			{
+				float absXVel = Mathf.Abs(_rigidBody.velocity.x);
+				if(absXVel > 0.05f)
+				{
+					runSpeed = (absXVel / _maxSpeed);
+				}
+			}
+			_animator.SetFloat(_animSpeedX, runSpeed);
+
 			_animator.SetBool(_animIsOnGroundId, IsOnGround || IsInCoyoteTime);
-			_animator.SetFloat(_animSpeedX, Mathf.Abs(_rigidBody.velocity.x) / (_speed * _runFactor));
 			_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
 			_animator.SetBool(_animIsCrouchingId, IsCrouching);
 
@@ -397,47 +485,6 @@ namespace Game
 
 				_rigidBody.AddForce(recoil, ForceMode2D.Impulse);
 			}
-		}
-
-		private static float ClampVelocityIntoWall(Flags32<ContactFlags> contactFlags, float xVelocity)
-		{
-			if (contactFlags.TestAny(ContactFlags.OnLeftWall) && (xVelocity < 0.0f))
-			{
-				return 0.0f;
-			}
-			else if (contactFlags.TestAny(ContactFlags.OnRightWall) && (xVelocity > 0.0f))
-			{
-				return 0.0f;
-			}
-
-			return xVelocity;
-		}
-		private void UpdateJump()
-		{
-			// Ensure character falls faster than when rising
-			if (_rigidBody.velocity.y < 0.0f)
-			{
-				_rigidBody.velocity +=
-					GetGravityRelativeForce(_fallFactor) * Time.deltaTime;
-			}
-			// Ensure character falls faster if they're not holding the
-			// jump button
-			else if ((_rigidBody.velocity.y > 0.0f) && !JumpHeld)
-			{
-				_rigidBody.velocity +=
-					GetGravityRelativeForce(_lowJumpFactor) * Time.deltaTime;
-			}
-		}
-
-		private Vector2 GetGravityRelativeForce(float factor)
-		{
-			return Physics2D.gravity * factor;
-		}
-
-		private void ApplyJumpImpuse()
-		{
-			_rigidBody.velocity =
-				new Vector2(_rigidBody.velocity.x, _jumpImpulse);
 		}
 
 		private bool IsInCoyoteTime => (Time.time - _lastTimeOnGround) < _coyoteTime;

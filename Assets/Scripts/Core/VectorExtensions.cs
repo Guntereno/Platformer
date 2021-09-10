@@ -33,15 +33,5 @@ namespace Momo.Core
 			vec.z = val;
 			return vec;
 		}
-
-		public static Vector2 PerpendicularR(this Vector2 vec)
-		{
-			return new Vector2(vec.y, -vec.x);
-		}
-
-		public static Vector2 PerpendicularL(this Vector2 vec)
-		{
-			return new Vector2(-vec.y, vec.x);
-		}
 	}
 }
