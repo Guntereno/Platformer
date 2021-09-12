@@ -22,14 +22,6 @@
                     "interactions": ""
                 },
                 {
-                    "name": "Run",
-                    "type": "Value",
-                    "id": "2e5d83f1-0603-4656-8c07-ac17ca08acc0",
-                    "expectedControlType": "Axis",
-                    "processors": "",
-                    "interactions": ""
-                },
-                {
                     "name": "Crouch",
                     "type": "Value",
                     "id": "7daa1dd2-bdcb-46ca-a20f-d5357dc1fddd",
@@ -214,28 +206,6 @@
                 },
                 {
                     "name": "",
-                    "id": "4b90cd59-2d69-4182-9801-b1c755377027",
-                    "path": "<Keyboard>/leftShift",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Run",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "f400028b-7ebf-4f9e-aecd-b5a952f54b12",
-                    "path": "<Gamepad>/buttonWest",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Run",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "01b18443-3b78-474f-b091-83f0ce4342a8",
                     "path": "<Keyboard>/s",
                     "interactions": "",
@@ -258,6 +228,17 @@
                 },
                 {
                     "name": "",
+                    "id": "47f85c48-ce62-4294-b863-790c0ebc922e",
+                    "path": "<Gamepad>/leftStick/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "119bce26-6ddd-4b4c-a52b-702c2275b33c",
                     "path": "<Mouse>/leftButton",
                     "interactions": "",
@@ -270,7 +251,7 @@
                 {
                     "name": "",
                     "id": "592c2a21-955a-4f0b-a296-e15439cfcbd8",
-                    "path": "<Gamepad>/rightShoulder",
+                    "path": "<Gamepad>/buttonWest",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

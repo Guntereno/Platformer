@@ -53,6 +53,7 @@ namespace Game
 		[SerializeField] private float _acceleration = 1.0f;
 
 		[SerializeField] private float _jumpImpulse = 4.0f;
+		[SerializeField] private int _numAirJumps = 1;
 		[SerializeField] private float _fallFactor = 0.0f;
 		[SerializeField] private float _lowJumpFactor = 0.0f;
 		[SerializeField] private float _coyoteTime = 0.0f;
@@ -82,6 +83,8 @@ namespace Game
 		private Vector2 _moveVector = default;
 
  		private Flags32<InputFlags> _inputFlags = InputFlags.None;
+
+		private int _airJumpCounter = 0;
 
 		private bool IsJumpHeld
 		{
@@ -174,6 +177,11 @@ namespace Game
 
 			DebugDrawCollisionChecks();
 			DebugDrawGroundNormals();
+
+			if (IsOnGround)
+			{
+				_airJumpCounter = 0;
+			}
 		}
 
 		void OnGUI()
@@ -181,6 +189,7 @@ namespace Game
 #if UNITY_EDITOR
 			GUI.Label(new Rect(25, 25, 180, 20), $"IsOnGround: {IsOnGround}");
 			GUI.Label(new Rect(25, 45, 180, 20), $"Velocity: {_rigidBody.velocity}");
+			GUI.Label(new Rect(25, 65, 180, 20), $"Air Jump Counter: {_airJumpCounter}");
 #endif
 		}
 
@@ -353,11 +362,16 @@ namespace Game
 		{
 			bool isHeld = input.Get<float>() > 0.0f;
 
-			bool canJump = IsOnGround || IsInCoyoteTime;
+			bool canJump = IsOnGround || IsInCoyoteTime || (_airJumpCounter < _numAirJumps);
 			bool wasHeld = IsJumpHeld;
 			if (canJump && (!wasHeld && isHeld))
 			{
 				_rigidBody.AddForce(new Vector2(0.0f, _jumpImpulse), ForceMode2D.Impulse);
+
+				if(!IsOnGround)
+				{
+					++_airJumpCounter;
+				}
 			}
 
 			IsJumpHeld = isHeld;
