@@ -194,19 +194,19 @@ AnimatorStateMachine:
     m_Position: {x: 260, y: 40, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -4766122831086818063}
-    m_Position: {x: 180, y: 480, z: 0}
+    m_Position: {x: 260, y: 480, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6501708752365565181}
-    m_Position: {x: 460, y: 300, z: 0}
+    m_Position: {x: 580, y: 320, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -8643274579258889354}
-    m_Position: {x: 520, y: 140, z: 0}
+    m_Position: {x: 580, y: 160, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1505234709547914480}
-    m_Position: {x: 560, y: 40, z: 0}
+    m_Position: {x: 620, y: 40, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 761579839756046281}
-    m_Position: {x: 180, y: 300, z: 0}
+    m_Position: {x: 260, y: 320, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -388,25 +388,25 @@ AnimatorController:
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: SpeedX
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: IsOnGround
     m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: IsCrouching
     m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Base Layer

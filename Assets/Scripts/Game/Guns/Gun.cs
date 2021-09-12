@@ -47,8 +47,7 @@ namespace Game.Guns
 		private IEnumerator RecoilCoroutine()
 		{
 			_muzzleFlash.SetActive(true);
-
-			int muzzleFrames = 2;
+			int muzzleFrames = 4;
 
 			float recoilTime;
 			do

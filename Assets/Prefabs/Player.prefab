@@ -56,9 +56,8 @@ MonoBehaviour:
   _rigidBody: {fileID: 2619971862393951112}
   _deadzone: 0.2
   _maxSpeed: 13
-  _acceleration: 1.8
-  _runFactor: 2
-  _jumpImpulse: 13
+  _acceleration: 2.5
+  _jumpImpulse: 14
   _fallFactor: 0.08
   _lowJumpFactor: 0.05
   _coyoteTime: 0.1

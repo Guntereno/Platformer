@@ -39,9 +39,8 @@ namespace Game
 			None = 0,
 
 			Jump = 1 << 0,
-			Run = 1 << 1,
-			Crouch = 1 << 2,
-			Fire = 1 << 3
+			Crouch = 1 << 1,
+			Fire = 1 << 2
 		}
 
 		[SerializeField] private Animator _animator = null;
@@ -52,7 +51,6 @@ namespace Game
 		[SerializeField] private float _deadzone = 0.2f;
 		[SerializeField] private float _maxSpeed = 1.0f;
 		[SerializeField] private float _acceleration = 1.0f;
-		[SerializeField] private float _runFactor = 1.5f;
 
 		[SerializeField] private float _jumpImpulse = 4.0f;
 		[SerializeField] private float _fallFactor = 0.0f;
@@ -85,25 +83,19 @@ namespace Game
 
  		private Flags32<InputFlags> _inputFlags = InputFlags.None;
 
-		private bool JumpHeld
+		private bool IsJumpHeld
 		{
 			get => _inputFlags.TestAll(InputFlags.Jump);
 			set => _inputFlags.Assign(InputFlags.Jump, value);
 		}
 
-		private bool RunHeld
-		{
-			get => _inputFlags.TestAll(InputFlags.Run);
-			set => _inputFlags.Assign(InputFlags.Run, value);
-		}
-
-		private bool CrouchHeld
+		private bool IsCrouchHeld
 		{
 			get => _inputFlags.TestAll(InputFlags.Crouch);
 			set => _inputFlags.Assign(InputFlags.Crouch, value);
 		}
 
-		private bool FireHeld
+		private bool IsFireHeld
 		{
 			get => _inputFlags.TestAll(InputFlags.Fire);
 			set => _inputFlags.Assign(InputFlags.Fire, value);
@@ -115,8 +107,8 @@ namespace Game
 		private readonly PlayerCollisionFlags CollisionFlags;
 
 		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.OnGround);
-		public bool OnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
-		public bool IsCrouching => IsOnGround && CrouchHeld;
+		public bool IsOnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
+		public bool IsCrouching => IsOnGround && IsCrouchHeld;
 
 		public Vector2 Position => _transform.position;
 
@@ -362,28 +354,23 @@ namespace Game
 			bool isHeld = input.Get<float>() > 0.0f;
 
 			bool canJump = IsOnGround || IsInCoyoteTime;
-			bool wasHeld = JumpHeld;
+			bool wasHeld = IsJumpHeld;
 			if (canJump && (!wasHeld && isHeld))
 			{
 				_rigidBody.AddForce(new Vector2(0.0f, _jumpImpulse), ForceMode2D.Impulse);
 			}
 
-			JumpHeld = isHeld;
-		}
-
-		private void OnRun(InputValue input)
-		{
-			RunHeld = (input.Get<float>() > 0.0f);
+			IsJumpHeld = isHeld;
 		}
 
 		private void OnCrouch(InputValue input)
 		{
-			CrouchHeld = (input.Get<float>() > 0.0f);
+			IsCrouchHeld = (input.Get<float>() > 0.0f);
 		}
 
 		private void OnFire(InputValue input)
 		{
-			FireHeld = (input.Get<float>() > 0.0f);
+			IsFireHeld = (input.Get<float>() > 0.0f);
 		}
 
 		#endregion
@@ -396,10 +383,6 @@ namespace Game
 			if ((Mathf.Abs(_moveVector.x) > _deadzone) && !IsCrouching)
 			{
 				float acceleration = _acceleration;
-				if (RunHeld)
-				{
-					acceleration *= _runFactor;
-				}
 
 				// Apply movent requested via input
 				// Ensure accelleration is applied in direction of the ground, to help climbing of slopes
@@ -417,7 +400,7 @@ namespace Game
 			}
 			// Ensure character falls faster if they're not holding the
 			// jump button
-			else if ((velocity.y > 0.0f) && !JumpHeld)
+			else if ((velocity.y > 0.0f) && !IsJumpHeld)
 			{
 				velocity += Physics2D.gravity * _lowJumpFactor;
 			}
@@ -460,7 +443,7 @@ namespace Game
 			_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
 			_animator.SetBool(_animIsCrouchingId, IsCrouching);
 
-			if(!FireHeld)
+			if(!IsFireHeld)
 			{
 				if (_moveVector.x > 0)
 				{
@@ -477,7 +460,7 @@ namespace Game
 		{
 			if (_currentGun != null)
 			{
-				bool weaponDischarged = _currentGun.OnFire(FireHeld, out Vector2 recoil);
+				bool weaponDischarged = _currentGun.OnFire(IsFireHeld, out Vector2 recoil);
 
 				if(weaponDischarged)
 				{
