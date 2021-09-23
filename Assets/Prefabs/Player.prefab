@@ -14,8 +14,6 @@ GameObject:
   - component: {fileID: 2619971862393951159}
   - component: {fileID: 6966788115868469079}
   - component: {fileID: 611855502825437868}
-  - component: {fileID: 1079407549230831803}
-  - component: {fileID: 313908044998154177}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -52,18 +50,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _animator: {fileID: 2619971862419907296}
   _bodyCollider: {fileID: 611855502825437868}
-  _feetCollider: {fileID: 1079407549230831803}
   _rigidBody: {fileID: 2619971862393951112}
   _deadzone: 0.2
-  _maxSpeed: 13
-  _acceleration: 2.5
+  _maxSpeed: 11
+  _acceleration: 150
   _jumpImpulse: 14
+  _numAirJumps: 1
   _fallFactor: 0.08
   _lowJumpFactor: 0.05
-  _coyoteTime: 0.1
+  _airborneAccelerationFactor: 0.5
+  _coyoteTime: 0.025
   _contectCheckDistance: 0.15
   _currentGun: {fileID: 8573154131504116638}
   _crouchRecoilFactor: 0.5
+  _wallGripGravityScale: 0.75
+  _groundFriction: 10
+  _groundMinVelocity: 0.1
+  _wallJumpAngleRadians: 1.2
+  _wallJumpImpulse: 20
+  _wallJumpLaunchDuration: 0.25
 --- !u!50 &2619971862393951112
 Rigidbody2D:
   serializedVersion: 4
@@ -148,40 +153,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 0.85, y: 1.35}
+  m_Size: {x: 0.85, y: 1.2}
   m_Direction: 0
---- !u!58 &1079407549230831803
-CircleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2619971862393951117}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 6200000, guid: ef514670555d8154bb9c3152ec453ffe, type: 2}
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: -0.36}
-  serializedVersion: 2
-  m_Radius: 0.36
---- !u!58 &313908044998154177
-CircleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2619971862393951117}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 6200000, guid: ef514670555d8154bb9c3152ec453ffe, type: 2}
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.32}
-  serializedVersion: 2
-  m_Radius: 0.4
 --- !u!1 &2619971862419907301
 GameObject:
   m_ObjectHideFlags: 0
@@ -208,7 +181,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2619971862419907301}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.7, z: 0}
+  m_LocalPosition: {x: 0, y: -0.5875061, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2619971864042329439}

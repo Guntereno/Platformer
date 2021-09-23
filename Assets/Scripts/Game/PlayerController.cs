@@ -9,7 +9,6 @@ namespace Game
 {
 	[RequireComponent(typeof(Animator))]
 	[RequireComponent(typeof(CapsuleCollider2D))]
-	[RequireComponent(typeof(CircleCollider2D))]
 	[RequireComponent(typeof(Rigidbody2D))]
 	public class PlayerController : MonoBehaviour
 	{
@@ -36,7 +35,6 @@ namespace Game
 
 		[SerializeField] private Animator _animator = null;
 		[SerializeField] private CapsuleCollider2D _bodyCollider = null;
-		[SerializeField] private CircleCollider2D _feetCollider = null;
 		[SerializeField] private Rigidbody2D _rigidBody = null;
 
 		[SerializeField] private float _deadzone = 0.2f;
@@ -55,7 +53,12 @@ namespace Game
 		[SerializeField] private Weapon _currentGun = null;
 
 		[SerializeField] private float _crouchRecoilFactor = 0.5f;
-		
+
+		[SerializeField] private float _wallGripGravityScale = 0.2f;
+
+		[SerializeField] private float _groundFriction = 0.5f;
+		[SerializeField] private float _groundMinVelocity = 0.1f;
+
 		[SerializeField] private float _wallJumpAngleRadians = 0.0f;
 		[SerializeField] private float _wallJumpImpulse = 4.0f;
 		[SerializeField] private float _wallJumpLaunchDuration = 0.25f;
@@ -86,12 +89,18 @@ namespace Game
 		private int _airJumpCounter = 0;
 		private float _lastTimeWallJumped = float.MinValue;
 
-
 		private Flags32<ContactFlags> _contactFlags = ContactFlags.None;
 		private float _lastTimeOnGround = float.MinValue;
 
+		GroundCheckParams _groundCheckParams;
+
+
 		public Vector2 Position => _transform.position;
 		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.OnGround);
+		private bool IsOnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
+		public bool IsGrippingWall => !IsOnGround && IsOnWall;
+		private bool IsCrouching => IsOnGround && IsCrouchHeld;
+		private bool IsInCoyoteTime => !IsOnGround && (Time.time - _lastTimeOnGround) < _coyoteTime;
 
 		private bool IsJumpHeld
 		{
@@ -110,11 +119,6 @@ namespace Game
 			get => _inputFlags.TestAll(InputFlags.Fire);
 			set => _inputFlags.Assign(InputFlags.Fire, value);
 		}
-
-		private bool IsInCoyoteTime => (Time.time - _lastTimeOnGround) < _coyoteTime;
-
-		private bool IsOnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
-		private bool IsCrouching => IsOnGround && IsCrouchHeld;
 
 		private Vector2 GroundDirectionLeft => Vector2.Perpendicular(_groundNormalLeft);
 		private Vector2 GroundDirectionRight => -Vector2.Perpendicular(_groundNormalRight);
@@ -147,6 +151,8 @@ namespace Game
 
 			_groundAndPropsMask = LayerMask.GetMask("Ground", "Props");
 			_groundMask = LayerMask.GetMask("Ground");
+
+			_groundCheckParams = BuildGroundCheckParams();
 		}
 
 		private void FixedUpdate()
@@ -156,6 +162,13 @@ namespace Game
 			FixedUpdateVelocity();
 
 			ResetGroundNormals();
+
+			if (IsOnGround)
+			{
+				_lastTimeOnGround = Time.time;
+			}
+
+			UpdateGravityScale();
 		}
 
 		private void OnCollisionEnter2D(Collision2D collision)
@@ -170,16 +183,11 @@ namespace Game
 
 		private void Update()
 		{
-			if (IsOnGround)
-			{
-				_lastTimeOnGround = Time.time;
-			}
-
 			UpdateFiring();
 			UpdateAnimation();
 			UpdateFallDeath();
 
-			if (IsOnGround || IsOnWall)
+			if (IsOnGround || IsInCoyoteTime || IsOnWall)
 			{
 				_airJumpCounter = 0;
 			}
@@ -199,71 +207,6 @@ namespace Game
 		#endregion
 
 
-		#region Debug Drawing
-
-		private void DebugDraw()
-		{
-#if UNITY_EDITOR
-			DebugDrawCollisionChecks();
-			DebugDrawGroundNormals();
-			DebugDrawWallJump();
-#endif
-		}
-
-		private void DebugDrawCollisionChecks()
-		{
-			DebugDrawGroundCheck(_contactFlags.TestAll(ContactFlags.OnGround));
-			DebugDrawWallCheck(Vector2.left, _contactFlags.TestAll(ContactFlags.OnLeftWall));
-			DebugDrawWallCheck(Vector2.right, _contactFlags.TestAll(ContactFlags.OnRightWall));
-		}
-
-		private void DebugDrawGroundNormals()
-		{
-			Vector2 groundNormalStart = (Vector2)_transform.position
-				+ _bodyCollider.offset
-				- (_bodyCollider.size * 0.5f).WithX(0.0f);
-
-			Debug.DrawLine(groundNormalStart, groundNormalStart + GroundDirectionLeft, Color.cyan);
-			Debug.DrawLine(groundNormalStart, groundNormalStart + GroundDirectionRight, Color.cyan);
-		}
-
-		private void DebugDrawGroundCheck(bool hitOccured)
-		{
-			GroundCheckParams checkParams = BuildGroundCheckParams();
-
-			float startTheta = Mathf.PI;
-			Vector2 arcCenter = checkParams.Origin + (Vector2.down * _contectCheckDistance);
-			Core.DebugDraw.Arc(
-				arcCenter,
-				startTheta,
-				Mathf.PI,
-				checkParams.Radius,
-				(hitOccured ? Color.green : Color.grey));
-		}
-
-		private void DebugDrawWallCheck(Vector2 dir, bool hitOccured)
-		{
-			WallCheckParams checkParams = BuildWallCheckParams(dir);
-
-			Vector2 start = checkParams.Origin + (dir * ((checkParams.BoxSize.x * 0.5f) + _contectCheckDistance));
-			start.y += checkParams.BoxSize.y * 0.5f;
-			Vector2 end = start + (Vector2.down * checkParams.BoxSize.y);
-			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
-		}
-
-		private void DebugDrawWallJump()
-		{
-			if(IsOnWall)
-			{
-				Vector2 jumpDir = GetWallJumpDirection();
-				Vector2 start = _transform.position;
-				Debug.DrawLine(start, start + jumpDir, Color.yellow);
-			}
-		}
-
-		#endregion
-
-
 		#region Input Callbacks
 
 		private void OnMove(InputValue input)
@@ -276,9 +219,9 @@ namespace Game
 			bool isHeld = input.Get<float>() > 0.0f;
 			bool wasHeld = IsJumpHeld;
 
-			if (IsOnWall && !IsOnGround)
+			if (IsGrippingWall)
 			{
-				if(!wasHeld && isHeld)
+				if (!wasHeld && isHeld)
 				{
 					Vector2 jumpDir = GetWallJumpDirection();
 					AddJumpForce(jumpDir * _wallJumpImpulse);
@@ -331,17 +274,32 @@ namespace Game
 			{
 				++_airJumpCounter;
 			}
+
+			// End Coyote Time to prevent zero gravity after launch
+			_lastTimeOnGround = Time.time;
 		}
 
 		private void FixedUpdateVelocity()
 		{
-			Vector2 inputAcceleration = CalculateInputAcceleration();
+			Vector2 velocity = _rigidBody.velocity;
 
-			Vector2 velocity = _rigidBody.velocity + inputAcceleration;
-
-			if (IsOnWall && !HasJustWallJumped)
+			// Apply friction with ground. (Player's physics material has zero
+			// friction, so we must do this ourselves.)
+			if (IsOnGround)
 			{
-				velocity.y = 0.0f;
+				velocity += (-velocity * _groundFriction) * Time.fixedDeltaTime;
+				if(velocity.sqrMagnitude < (_groundMinVelocity * _groundMinVelocity))
+				{
+					velocity = Vector2.zero;
+				}
+			}
+
+			Vector2 inputAcceleration = CalculateInputAcceleration();
+			velocity += inputAcceleration * Time.fixedDeltaTime;
+
+			if (IsGrippingWall && !HasJustWallJumped)
+			{
+				velocity.y = 0;
 			}
 			else
 			{
@@ -364,27 +322,35 @@ namespace Game
 
 			_rigidBody.velocity = velocity;
 		}
+		private void UpdateGravityScale()
+		{
+			if (IsGrippingWall)
+			{
+				_rigidBody.gravityScale = _wallGripGravityScale;
+			}
+			else
+			{
+				_rigidBody.gravityScale = (IsOnGround || IsInCoyoteTime) ? 0.0f : 1.0f;
+			}
+		}
 
 		private Vector2 CalculateInputAcceleration()
 		{
-			Vector2 moveForce = Vector2.zero;
+			Vector2 acceleration = Vector2.zero;
 
 			if ((Mathf.Abs(_moveVector.x) > _deadzone) && !IsCrouching)
 			{
-				float acceleration = _acceleration;
-
-				// Apply movent requested via input
-				// Ensure accelleration is applied in direction of the ground, to help climbing of slopes
-				moveForce = ((_moveVector.x > 0.0f) ? GroundDirectionRight : GroundDirectionLeft) * acceleration;
+				acceleration = _moveVector.WithY(0.0f) * _acceleration;
 			}
 
-			moveForce = ClampIntoWall(_contactFlags, moveForce);
+			acceleration = ClampIntoWall(_contactFlags, acceleration);
+
 			if (!IsOnGround)
 			{
-				moveForce *= _airborneAccelerationFactor;
+				acceleration *= _airborneAccelerationFactor;
 			}
 
-			return moveForce;
+			return acceleration;
 		}
 
 		private static Vector2 ClampIntoWall(Flags32<ContactFlags> contactFlags, Vector2 force)
@@ -424,19 +390,19 @@ namespace Game
 
 			if (IsOnWall)
 			{
-				switch(IsOnWhichWall())
+				switch (IsOnWhichWall())
 				{
 					case ContactFlags.OnLeftWall:
-					{
-						LookRight();
-						break;
-					}
+						{
+							LookRight();
+							break;
+						}
 
 					case ContactFlags.OnRightWall:
-					{
-						LookLeft();
-						break;
-					}
+						{
+							LookLeft();
+							break;
+						}
 				}
 			}
 			else
@@ -538,24 +504,6 @@ namespace Game
 			public float Radius;
 		}
 
-		private GroundCheckParams BuildGroundCheckParams()
-		{
-			GroundCheckParams result;
-			result.Origin = (Vector2)_transform.position + _feetCollider.offset;
-			result.Radius = _feetCollider.radius;
-			return result;
-		}
-
-		private RaycastHit2D GroundCheck()
-		{
-			GroundCheckParams checkParams = BuildGroundCheckParams();
-			RaycastHit2D hit = Physics2D.CircleCast(
-				checkParams.Origin, checkParams.Radius, Vector2.down,
-				_contectCheckDistance, _groundAndPropsMask);
-
-			return hit;
-		}
-
 		private struct WallCheckParams
 		{
 			public Vector2 BoxSize;
@@ -574,7 +522,30 @@ namespace Game
 			result.Origin =
 				(Vector2)_transform.position
 				+ (dir * (result.BoxSize.x * 0.5f));
+
 			return result;
+		}
+
+		private GroundCheckParams BuildGroundCheckParams()
+		{
+			GroundCheckParams result;
+
+			result.Origin = _bodyCollider.offset;
+			result.Origin.y -= (_bodyCollider.size.y - _bodyCollider.size.x) * 0.5f;
+			result.Radius = _bodyCollider.size.x * 0.5f;
+
+			return result;
+		}
+
+		private RaycastHit2D GroundCheck()
+		{
+			RaycastHit2D hit = Physics2D.CircleCast(
+				(Vector2)(_transform.position) + _groundCheckParams.Origin,
+				_groundCheckParams.Radius,
+				Vector2.down,
+				_contectCheckDistance, _groundAndPropsMask);
+
+			return hit;
 		}
 
 		private RaycastHit2D ContactWallCheck(Vector2 dir)
@@ -619,6 +590,70 @@ namespace Game
 			}
 		}
 
+
+		#region Debug Drawing
+
+		private void DebugDraw()
+		{
+#if UNITY_EDITOR
+			DebugDrawCollisionChecks();
+			DebugDrawGroundNormals();
+			DebugDrawWallJump();
+#endif
+		}
+
+		private void DebugDrawCollisionChecks()
+		{
+			DebugDrawGroundCheck(_contactFlags.TestAll(ContactFlags.OnGround));
+			DebugDrawWallCheck(Vector2.left, _contactFlags.TestAll(ContactFlags.OnLeftWall));
+			DebugDrawWallCheck(Vector2.right, _contactFlags.TestAll(ContactFlags.OnRightWall));
+		}
+
+		private void DebugDrawGroundNormals()
+		{
+			Vector2 groundNormalStart = (Vector2)_transform.position
+				+ _bodyCollider.offset
+				- (_bodyCollider.size * 0.5f).WithX(0.0f);
+
+			Debug.DrawLine(groundNormalStart, groundNormalStart + GroundDirectionLeft, Color.cyan);
+			Debug.DrawLine(groundNormalStart, groundNormalStart + GroundDirectionRight, Color.cyan);
+		}
+
+		private void DebugDrawGroundCheck(bool hitOccured)
+		{
+			float startTheta = Mathf.PI;
+			Vector2 arcCenter = (Vector2)_transform.position
+				+ _groundCheckParams.Origin
+				+ (Vector2.down * _contectCheckDistance);
+			Core.DebugDraw.Arc(
+				arcCenter,
+				startTheta,
+				Mathf.PI,
+				_groundCheckParams.Radius,
+				(hitOccured ? Color.green : Color.grey));
+		}
+
+		private void DebugDrawWallCheck(Vector2 dir, bool hitOccured)
+		{
+			WallCheckParams checkParams = BuildWallCheckParams(dir);
+
+			Vector2 start = checkParams.Origin + (dir * ((checkParams.BoxSize.x * 0.5f) + _contectCheckDistance));
+			start.y += checkParams.BoxSize.y * 0.5f;
+			Vector2 end = start + (Vector2.down * checkParams.BoxSize.y);
+			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
+		}
+
+		private void DebugDrawWallJump()
+		{
+			if (IsOnWall)
+			{
+				Vector2 jumpDir = GetWallJumpDirection();
+				Vector2 start = _transform.position;
+				Debug.DrawLine(start, start + jumpDir, Color.yellow);
+			}
+		}
+
+		#endregion
 	}
 
 }

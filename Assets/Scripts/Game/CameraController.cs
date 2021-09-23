@@ -87,7 +87,7 @@ namespace Game
 				GetVerticalBounds(out float minY, out float maxY);
 
 				float targetPosY = _target.Position.y;
-				if ((targetPosY > maxY) && (_target.IsOnGround))
+				if ((targetPosY > maxY) && (_target.IsOnGround || _target.IsGrippingWall))
 				{
 					cameraTarget.y = targetPosY;
 				}
