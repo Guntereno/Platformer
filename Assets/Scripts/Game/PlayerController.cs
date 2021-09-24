@@ -274,9 +274,6 @@ namespace Game
 			{
 				++_airJumpCounter;
 			}
-
-			// End Coyote Time to prevent zero gravity after launch
-			_lastTimeOnGround = Time.time;
 		}
 
 		private void FixedUpdateVelocity()
@@ -322,6 +319,7 @@ namespace Game
 
 			_rigidBody.velocity = velocity;
 		}
+
 		private void UpdateGravityScale()
 		{
 			if (IsGrippingWall)

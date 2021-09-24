@@ -9886,13 +9886,9 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 611855502825437868, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: m_Size.y
-      value: 1.2
-      objectReference: {fileID: 0}
-    - target: {fileID: 2619971862393951113, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: _groundFriction
-      value: 0.3
-      objectReference: {fileID: 0}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 6200000, guid: ef514670555d8154bb9c3152ec453ffe, type: 2}
     - target: {fileID: 2619971862393951115, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -9945,12 +9941,7 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 890058461}
-    - target: {fileID: 2619971862419907298, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0.5875061
-      objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 1079407549230831803, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
 --- !u!1001 &8183807613933445188
 PrefabInstance:
