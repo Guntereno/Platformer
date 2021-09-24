@@ -59,7 +59,7 @@ MonoBehaviour:
   _fallFactor: 0.08
   _lowJumpFactor: 0.05
   _airborneAccelerationFactor: 0.5
-  _coyoteTime: 0.025
+  _coyoteTime: 0.08
   _contectCheckDistance: 0.15
   _currentGun: {fileID: 8573154131504116638}
   _crouchRecoilFactor: 0.5
@@ -148,7 +148,7 @@ CapsuleCollider2D:
   m_GameObject: {fileID: 2619971862393951117}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 6200000, guid: cf80282d4c9ed964293ad2fd8c68025a, type: 2}
+  m_Material: {fileID: 6200000, guid: ef514670555d8154bb9c3152ec453ffe, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
