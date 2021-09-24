@@ -98,7 +98,7 @@ namespace Game
 		public Vector2 Position => _transform.position;
 		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.OnGround);
 		private bool IsOnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
-		public bool IsGrippingWall => !IsOnGround && IsOnWall;
+		public bool IsGrippingWall => !IsOnGround && !IsCrouchHeld && IsOnWall;
 		private bool IsCrouching => IsOnGround && IsCrouchHeld;
 		private bool IsInCoyoteTime => !IsOnGround && (Time.time - _lastTimeOnGround) < _coyoteTime;
 
