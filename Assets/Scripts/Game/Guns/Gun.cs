@@ -5,7 +5,6 @@ using System.Collections;
 namespace Game.Guns
 {
 	[RequireComponent(typeof(AudioSource))]
-	[RequireComponent(typeof(RandomAudioClipPool))]
 	class Gun : Weapon
 	{
 		[SerializeField] private Transform _gunSprite = null;
@@ -19,20 +18,24 @@ namespace Game.Guns
 		[SerializeField] private float _recoilFactor = 0.1f;
 		[SerializeField] private float _spriteRecoilDistance = 0.1f;
 		[SerializeField] private float _spriteRecoilTime = 0.1f;
+		[SerializeField] private RandomAudioClipPool _audioPool = null;
 
 		private Projectile[] _projectilePool = null;
 		private float _lastFired = float.MinValue;
 
 		private AudioSource _audioSource = null;
-		private RandomAudioClipPool _audioPool = null;
 		private Coroutine _recoilCoroutine;
 
 		private bool OnCooldown => (Time.time - _lastFired) < _cooldownTime;
 
 		private void Awake()
 		{
+			if(_audioPool != null)
+			{
+				_audioPool.Init();
+			}
+
 			_audioSource = GetComponent<AudioSource>();
-			_audioPool = GetComponent<RandomAudioClipPool>();
 
 			_projectilePool = new Projectile[_maxLiveProjectiles];
 			for(int i=0; i<_maxLiveProjectiles; ++i)
@@ -96,7 +99,7 @@ namespace Game.Guns
 
 			_gunSprite.localPosition = recoil;
 
-			if (_audioSource != null)
+			if ((_audioSource != null) && (_audioPool != null))
 			{
 				_audioSource.clip = _audioPool.Next();
 				_audioSource.Play();

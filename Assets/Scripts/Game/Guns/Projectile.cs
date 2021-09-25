@@ -8,6 +8,9 @@ namespace Game.Guns
 	[RequireComponent(typeof(Collider2D))]
 	public class Projectile : MonoBehaviour
 	{
+		[SerializeField] private string _audioPoolName;
+		[SerializeField] private AudioSource _audioSource;
+
 		private Transform _transform;
 		private Rigidbody2D _rigidbody2D;
 		private Animator _animator;
@@ -62,9 +65,10 @@ namespace Game.Guns
 				_rigidbody2D.isKinematic = value;
 				_collider.enabled = !value;
 
-				if(value)
+				if (value)
 				{
 					_rigidbody2D.velocity = Vector2.zero;
+					PlayRicochet();
 				}
 			}
 		}
@@ -91,6 +95,15 @@ namespace Game.Guns
 		void OnImpactFinished()
 		{
 			gameObject.SetActive(false);
+		}
+
+		private void PlayRicochet()
+		{
+			if ((_audioSource != null) && (_audioPoolName != null))
+			{
+				_audioSource.clip = Singleton.Instance.AudioPools.Next(_audioPoolName);
+				_audioSource.Play();
+			}
 		}
 	}
 }

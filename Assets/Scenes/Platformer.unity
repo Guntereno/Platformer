@@ -9730,6 +9730,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1645140521}
   - component: {fileID: 1645140522}
+  - component: {fileID: 1645140523}
   m_Layer: 0
   m_Name: Singleton
   m_TagString: Untagged
@@ -9764,6 +9765,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cameraController: {fileID: 890058463}
+  _audioPools: {fileID: 1645140523}
+--- !u!114 &1645140523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1645140520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7fc9a70e5715ff49af13f29a2e1c66a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Pools:
+  - {fileID: 11400000, guid: d49a613c8129c0a499a2ecd3948dc36d, type: 2}
 --- !u!1001 &2113701638
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9885,10 +9901,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 611855502825437868, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: m_Material
-      value: 
-      objectReference: {fileID: 6200000, guid: ef514670555d8154bb9c3152ec453ffe, type: 2}
     - target: {fileID: 2619971862393951115, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -9941,10 +9953,6 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 890058461}
-    - target: {fileID: 8573154131504116638, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
-      propertyPath: _maxLiveProjectiles
-      value: 8
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
 --- !u!1001 &8183807613933445188

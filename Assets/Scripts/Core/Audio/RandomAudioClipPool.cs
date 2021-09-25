@@ -4,7 +4,8 @@ using Random = Core.Random;
 
 namespace Core.Audio
 {
-	public class RandomAudioClipPool: MonoBehaviour
+	[CreateAssetMenu(menuName = "Audio/RandomAudioClipPool")]
+	public class RandomAudioClipPool: ScriptableObject
 	{
 		[SerializeField] private AudioClip[] _audioClips = null;
 
@@ -15,7 +16,7 @@ namespace Core.Audio
 
 		private int _currentIndex = 0;
 
-		private void Start()
+		public void Init()
 		{
 			int numClips = _audioClips.Length;
 

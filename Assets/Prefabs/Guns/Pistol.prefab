@@ -94,7 +94,6 @@ GameObject:
   - component: {fileID: 5024435937981082785}
   - component: {fileID: 5955435212849373583}
   - component: {fileID: 9217297243297710121}
-  - component: {fileID: 6217794910653525204}
   m_Layer: 7
   m_Name: Pistol
   m_TagString: Untagged
@@ -140,6 +139,7 @@ MonoBehaviour:
   _recoilFactor: 0.1
   _spriteRecoilDistance: 0.2
   _spriteRecoilTime: 0.5
+  _audioPool: {fileID: 11400000, guid: 51c8af950bc8b834d976c28f1d6ab758, type: 2}
 --- !u!82 &9217297243297710121
 AudioSource:
   m_ObjectHideFlags: 0
@@ -236,23 +236,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &6217794910653525204
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5024435937981082790}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8c7969036f406d4097e476a70a98afa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _audioClips:
-  - {fileID: 8300000, guid: e8b8fc57fb0a72d45b4a6b39cd4de9b6, type: 3}
-  - {fileID: 8300000, guid: 848c74d50f3b0c44cbf046a64c467ffa, type: 3}
-  - {fileID: 8300000, guid: a9fcb0a8e97cd2c49997e201901d15e8, type: 3}
-  - {fileID: 8300000, guid: 2661f83f78c49dd46ab0dfeafd4b2879, type: 3}
 --- !u!1 &5555002018427580506
 GameObject:
   m_ObjectHideFlags: 0

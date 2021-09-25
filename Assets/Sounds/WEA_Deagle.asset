@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8c7969036f406d4097e476a70a98afa, type: 3}
+  m_Name: WEA_Deagle
+  m_EditorClassIdentifier: 
+  _audioClips:
+  - {fileID: 8300000, guid: e8b8fc57fb0a72d45b4a6b39cd4de9b6, type: 3}
+  - {fileID: 8300000, guid: 848c74d50f3b0c44cbf046a64c467ffa, type: 3}
+  - {fileID: 8300000, guid: a9fcb0a8e97cd2c49997e201901d15e8, type: 3}
+  - {fileID: 8300000, guid: 2661f83f78c49dd46ab0dfeafd4b2879, type: 3}
