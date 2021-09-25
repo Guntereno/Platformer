@@ -8,7 +8,7 @@ namespace Game.Guns
 	[RequireComponent(typeof(AudioSource))]
 	class Gun : Weapon
 	{
-		[SerializeField] private Transform _gunSprite = null;
+		[SerializeField] private Transform _gunTransform = null;
 		[SerializeField] private GameObject _muzzleFlash = null;
 		[SerializeField] private float _cooldownTime = 0.0f;
 		[SerializeField] private float _spreadRadians = 0.0f;
@@ -62,7 +62,7 @@ namespace Game.Guns
 				float distance =
 					(1.0f - (recoilTime / _spriteRecoilTime))
 					* _spriteRecoilDistance;
-				_gunSprite.transform.localPosition = Vector2.left * distance;
+				_gunTransform.transform.localPosition = Vector2.left * distance;
 				yield return 0;
 
 				_muzzleFlash.SetActive(--muzzleFrames > 0);
@@ -103,8 +103,7 @@ namespace Game.Guns
 			Singleton.Instance.CameraController.ShotFired(velocity);
 
 			_lastFired = Time.time;
-
-			_gunSprite.localPosition = recoil;
+			_gunTransform.localPosition = recoil;
 
 			if ((_audioSource != null) && (_audioPool != null))
 			{
