@@ -191,7 +191,7 @@ namespace Game
 			UpdateAnimation();
 			UpdateFallDeath();
 
-			if (IsOnGround || IsInCoyoteTime || IsOnWall)
+			if (IsOnGround || IsInCoyoteTime || (IsOnWall && !IsCrouchHeld))
 			{
 				_airJumpCounter = 0;
 			}
