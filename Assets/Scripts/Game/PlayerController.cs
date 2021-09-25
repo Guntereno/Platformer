@@ -50,7 +50,7 @@ namespace Game
 		[SerializeField] private float _coyoteTime = 0.0f;
 		[SerializeField] private float _contectCheckDistance = 0.1f;
 
-		[SerializeField] private Weapon _currentGun = null;
+		[SerializeField] private Weapon[] _weapons = null;
 
 		[SerializeField] private float _crouchRecoilFactor = 0.5f;
 
@@ -93,6 +93,8 @@ namespace Game
 		private float _lastTimeOnGround = float.MinValue;
 
 		GroundCheckParams _groundCheckParams;
+
+		private Weapon _currentWeapon = null;
 
 
 		public Vector2 Position => _transform.position;
@@ -153,6 +155,8 @@ namespace Game
 			_groundMask = LayerMask.GetMask("Ground");
 
 			_groundCheckParams = BuildGroundCheckParams();
+
+			SetWeaponIndex(0);
 		}
 
 		private void FixedUpdate()
@@ -251,8 +255,40 @@ namespace Game
 			IsFireHeld = (input.Get<float>() > 0.0f);
 		}
 
+		private void OnNextWeapon(InputValue input)
+		{
+			if (input.Get<float>() > 0.0f)
+			{
+				NextWeapon();
+			}
+		}
+
 		#endregion
 
+		private void NextWeapon()
+		{
+			for (int i = 0; i < _weapons.Length; ++i)
+			{
+				if (_weapons[i] == _currentWeapon)
+				{
+					int nextWeaponIndex = (i + 1) % _weapons.Length;
+					SetWeaponIndex(nextWeaponIndex);
+					break;
+				}
+			}
+		}
+
+		private void SetWeaponIndex(int index)
+		{
+			if(_currentWeapon != null)
+			{
+				_currentWeapon.gameObject.SetActive(false);
+				Debug.Log($"Disabling '{_currentWeapon}'");
+			}
+			_currentWeapon = _weapons[index];
+			_currentWeapon.gameObject.SetActive(true);
+			Debug.Log($"Enabled '{_currentWeapon}'");
+		}
 
 		private Vector2 GetWallJumpDirection()
 		{
@@ -285,7 +321,7 @@ namespace Game
 			if (IsOnGround)
 			{
 				velocity += (-velocity * _groundFriction) * Time.fixedDeltaTime;
-				if(velocity.sqrMagnitude < (_groundMinVelocity * _groundMinVelocity))
+				if (velocity.sqrMagnitude < (_groundMinVelocity * _groundMinVelocity))
 				{
 					velocity = Vector2.zero;
 				}
@@ -447,9 +483,9 @@ namespace Game
 
 		private void UpdateFiring()
 		{
-			if (_currentGun != null)
+			if (_currentWeapon != null)
 			{
-				bool weaponDischarged = _currentGun.OnFire(IsFireHeld, out Vector2 recoil);
+				bool weaponDischarged = _currentWeapon.OnFire(IsFireHeld, out Vector2 recoil);
 
 				if (weaponDischarged)
 				{

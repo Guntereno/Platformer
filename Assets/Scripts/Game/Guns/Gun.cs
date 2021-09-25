@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Core.Audio;
 using System.Collections;
+using Momo.Core;
 
 namespace Game.Guns
 {
@@ -10,6 +11,7 @@ namespace Game.Guns
 		[SerializeField] private Transform _gunSprite = null;
 		[SerializeField] private GameObject _muzzleFlash = null;
 		[SerializeField] private float _cooldownTime = 0.0f;
+		[SerializeField] private float _spreadRadians = 0.0f;
 		[SerializeField] private Projectile _projectilePrefab = null;
 		[SerializeField] private int _maxLiveProjectiles = 0;
 		[SerializeField] private Transform _muzzle = null;
@@ -87,8 +89,13 @@ namespace Game.Guns
 
 			projectile.transform.position = _muzzle.position;
 			projectile.gameObject.SetActive(true);
-			Vector2 velocity =
-				_muzzle.TransformDirection(_muzzle.right) * _projectileSpeed;
+
+			Vector2 direction = _muzzle.TransformDirection(_muzzle.right);
+
+			float spread = Random.Range(-_spreadRadians, _spreadRadians);
+			direction = direction.Rotate(spread);
+			
+			Vector2 velocity = direction * _projectileSpeed;
 			projectile.Spawn(velocity, _projectileLifeSpan);
 
 			recoil = -velocity * _recoilFactor;

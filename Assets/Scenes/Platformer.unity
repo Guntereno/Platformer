@@ -9549,6 +9549,17 @@ TilemapCollider2D:
   m_Offset: {x: 0, y: 0}
   m_MaximumTileChangeCount: 0
   m_ExtrusionFactor: 1.02
+--- !u!114 &1085352076 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8573154131504116638, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
+  m_PrefabInstance: {fileID: 2619971862640601750}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ac62e74e906c7641a08bbcd418aeb24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1129382494
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9894,6 +9905,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 38c713b4b3ba72f479cd7f21c5a81ee3, type: 3}
+--- !u!114 &324446425697655308 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2367953085372608666, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
+  m_PrefabInstance: {fileID: 2619971862640601750}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ac62e74e906c7641a08bbcd418aeb24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &2619971862640601750
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9901,17 +9923,29 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2619971862393951113, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
+      propertyPath: _weapons.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2619971862393951113, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
+      propertyPath: _weapons.Array.data[0]
+      value: 
+      objectReference: {fileID: 324446425697655308}
+    - target: {fileID: 2619971862393951113, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
+      propertyPath: _weapons.Array.data[1]
+      value: 
+      objectReference: {fileID: 1085352076}
     - target: {fileID: 2619971862393951115, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2619971862393951115, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -2
+      value: 3.6069946
       objectReference: {fileID: 0}
     - target: {fileID: 2619971862393951115, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 15
+      value: 12.5625
       objectReference: {fileID: 0}
     - target: {fileID: 2619971862393951115, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
       propertyPath: m_LocalPosition.z

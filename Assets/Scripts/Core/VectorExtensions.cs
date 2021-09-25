@@ -33,5 +33,13 @@ namespace Momo.Core
 			vec.z = val;
 			return vec;
 		}
+
+		public static Vector2 Rotate(this Vector2 v, float theta)
+		{
+			return new Vector2(
+				v.x * Mathf.Cos(theta) - v.y * Mathf.Sin(theta),
+				v.x * Mathf.Sin(theta) + v.y * Mathf.Cos(theta)
+			);
+		}
 	}
 }
