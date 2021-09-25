@@ -18,7 +18,7 @@ namespace Game.Guns
 			_spinRatio = Mathf.Clamp01(_spinRatio + (accelleration * Time.deltaTime));
 
 			_spinAudio.volume = _volumeCurve.Evaluate(_spinRatio);
-			_spinAudio.pitch = _volumeCurve.Evaluate(_spinRatio);
+			_spinAudio.pitch = _pitchCurve.Evaluate(_spinRatio);
 		}
 
 		public override bool OnFire(bool fireHeld, out Vector2 recoil)
