@@ -283,11 +283,9 @@ namespace Game
 			if(_currentWeapon != null)
 			{
 				_currentWeapon.gameObject.SetActive(false);
-				Debug.Log($"Disabling '{_currentWeapon}'");
 			}
 			_currentWeapon = _weapons[index];
 			_currentWeapon.gameObject.SetActive(true);
-			Debug.Log($"Enabled '{_currentWeapon}'");
 		}
 
 		private Vector2 GetWallJumpDirection()

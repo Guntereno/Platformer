@@ -30,6 +30,13 @@ namespace Game.Guns
 			_gunSprite.sprite = _animSprites[(int)_animPos];
 		}
 
+		public void OnEnable()
+		{
+			_spinRatio = 0.0f;
+			_spinningUp = false;
+			_animPos = 0.0f;
+		}
+
 		public override bool OnFire(bool fireHeld, out Vector2 recoil)
 		{
 			_spinningUp = fireHeld;
