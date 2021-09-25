@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2373909966279195871}
-  - component: {fileID: 4030237407935230449}
   - component: {fileID: 1919052780035084375}
   m_Layer: 7
   m_Name: Minigun
@@ -33,31 +32,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4030237407935230449
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2373909966279195864}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6ac62e74e906c7641a08bbcd418aeb24, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _gunSprite: {fileID: 9009822847539376630}
-  _muzzleFlash: {fileID: 7656540692326865435}
-  _cooldownTime: 0.05
-  _spreadRadians: 0.1
-  _projectilePrefab: {fileID: 4934886322839379330, guid: 231c94bd797b9544fb5c0f0785514b6a, type: 3}
-  _maxLiveProjectiles: 32
-  _muzzle: {fileID: 5776940979129243969}
-  _projectileLifeSpan: 1
-  _projectileSpeed: 60
-  _recoilFactor: 0.1
-  _spriteRecoilDistance: 0.2
-  _spriteRecoilTime: 0.5
-  _audioPool: {fileID: 11400000, guid: 51c8af950bc8b834d976c28f1d6ab758, type: 2}
 --- !u!82 &1919052780035084375
 AudioSource:
   m_ObjectHideFlags: 0
