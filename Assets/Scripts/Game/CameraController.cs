@@ -1,5 +1,6 @@
 using UnityEngine;
 using Momo.Core;
+using UnityEngine.Tilemaps;
 
 namespace Game
 {
@@ -7,50 +8,66 @@ namespace Game
 	[RequireComponent(typeof(Camera))]
 	public class CameraController : MonoBehaviour
 	{
-		[SerializeField] PlayerController _target;
+		[SerializeField] Camera _camera = null;
+		[SerializeField] PlayerController _target = null;
+		[SerializeField] Tilemap _tilemap = null;
 
-		[SerializeField] float _focusZoneOffsetX;
-		[SerializeField] float _focusZoneWidth;
-		[SerializeField] float _focusZoneOffsetY;
-		[SerializeField] float _focusZoneHeight;
-		[SerializeField] float _cameraLerpParam;
+		[SerializeField] float _focusZoneOffsetX = 0.0f;
+		[SerializeField] float _focusZoneWidth = 0.0f;
+		[SerializeField] float _focusZoneOffsetY = 0.0f;
+		[SerializeField] float _focusZoneHeight = 0.0f;
+		[SerializeField] float _cameraLerpParam = 0.0f;
 
-		[SerializeField] bool _scrollY;
+		[SerializeField] bool _scrollY = false;
 
-		[SerializeField] float _recoilLerpParam;
-		[SerializeField] float _recoilFactor;
-		
-		float _depthPlane;
-		Vector2 _dollyPosition;
-		Vector2 _recoilOffset;
+		[SerializeField] float _recoilLerpParam = 0.0f;
+		[SerializeField] float _recoilFactor = 0.0f;
 
-		private float _initialY = 0.0f;
+		private float _depthPlane = 0.0f;
+		private Vector2 _dollyPosition = Vector2.zero;
+		private Vector2 _recoilOffset = Vector2.zero;
+		private bool _headingRight = true;
 
-		bool _headingRight = true;
-
+		public Vector2 CameraPosition => _camera.transform.position;
+		public Bounds ViewportBounds
+		{
+			get
+			{
+				float camHeight = _camera.orthographicSize;
+				float camWidth = camHeight * _camera.aspect;
+				Vector2 camPos = CameraPosition;
+				return new Bounds
+				{
+					min = new Vector3(camPos.x - camWidth, camPos.y - camHeight, 0.0f),
+					max = new Vector3(camPos.x + camWidth, camPos.y + camHeight, 0.0f)
+				};
+			}
+		}
 
 		public void ShotFired(Vector2 velocity)
 		{
 			_recoilOffset += -(velocity) * _recoilFactor;
 		}
 
-
-		private Camera _camera;
-		private Camera Camera
+		public Bounds CalculateDollyBounds()
 		{
-			get
+			Bounds localBounds = _tilemap.localBounds;
+
+			float camHeight = _camera.orthographicSize;
+			float camWidth = camHeight * _camera.aspect;
+
+			Vector3 camOffset = new Vector3(camWidth, camHeight, 0.0f);
+
+			Bounds levelBounds = Singleton.Instance.LevelController.LevelBounds;
+			return new Bounds()
 			{
-				if (_camera == null)
-				{
-					_camera = GetComponent<Camera>();
-				}
-				return _camera;
-			}
+				min = levelBounds.min + camOffset,
+				max = levelBounds.max - camOffset
+			};
 		}
 
 		private void Start()
 		{
-			_initialY = transform.position.y;
 			_dollyPosition = transform.position;
 			_depthPlane = transform.position.z;
 		}
@@ -81,7 +98,6 @@ namespace Game
 				cameraTarget.x = targetPosX - _focusZoneOffsetX;
 			}
 
-
 			if (_scrollY)
 			{
 				GetVerticalBounds(out float minY, out float maxY);
@@ -94,13 +110,19 @@ namespace Game
 				else if (targetPosY < minY)
 				{
 					cameraTarget.y = targetPosY;
-
-					if (cameraTarget.y < _initialY)
-					{
-						cameraTarget.y = _initialY;
-					}
 				}
 			}
+
+			Bounds cameraBounds = CalculateDollyBounds();
+
+			cameraTarget.x = Mathf.Clamp(
+					cameraTarget.x,
+					cameraBounds.min.x,
+					cameraBounds.max.x);
+			cameraTarget.y = Mathf.Clamp(
+					cameraTarget.y,
+					cameraBounds.min.y,
+					cameraBounds.max.y);
 
 			_dollyPosition = Vector3.Lerp(
 				_dollyPosition,
@@ -139,9 +161,9 @@ namespace Game
 
 		private void OnDrawGizmos()
 		{
-			float screenMaxY = Camera.orthographicSize;
+			float screenMaxY = _camera.orthographicSize;
 			float screenMinY = -screenMaxY;
-			float screenMaxX = screenMaxY * Camera.aspect;
+			float screenMaxX = screenMaxY * _camera.aspect;
 			float screenMinX = -screenMaxX;
 
 			GetHorizontalBounds(out float minX, out float maxX);
@@ -166,16 +188,20 @@ namespace Game
 			float minX, float maxX,
 			float minY, float maxY)
 		{
-			Vector3 center = new Vector3(
-				Mathf.Lerp(minX, maxX, 0.5f),
-				Mathf.Lerp(minY, maxY, 0.5f));
+			Bounds bounds = new Bounds
+			{
+				min = new Vector3(minX, minY, 0.0f),
+				max = new Vector3(maxX, maxY, 0.0f)
+			};
+			DrawBoundsGizmo(color, bounds);
+		}
 
-			Vector3 size = new Vector3(
-				maxX - minX,
-				maxY - minY);
-
+		private void DrawBoundsGizmo(
+			Color color,
+			Bounds bounds)
+		{
 			Gizmos.color = color;
-			Gizmos.DrawCube(center, size);
+			Gizmos.DrawCube(bounds.center, bounds.size);
 		}
 	}
 

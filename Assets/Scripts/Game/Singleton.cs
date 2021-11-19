@@ -9,12 +9,15 @@ namespace Game
 		[SerializeField]
 		private CameraController _cameraController;
 		[SerializeField]
+		private LevelController _levelController;
+		[SerializeField]
 		private AudioPools _audioPools;
 
 		private static Singleton _instance;
 
 		public static Singleton Instance => _instance;
 		public CameraController CameraController => _cameraController;
+		public LevelController LevelController => _levelController;
 		public AudioPools AudioPools => _audioPools;
 
 

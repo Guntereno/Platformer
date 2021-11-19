@@ -63,6 +63,8 @@ namespace Game
 		[SerializeField] private float _wallJumpImpulse = 4.0f;
 		[SerializeField] private float _wallJumpLaunchDuration = 0.25f;
 
+		[SerializeField] private float _fallDeathHeight = 0.0f;
+
 
 		private Vector2 _spawnPos = default;
 		private Transform _transform = null;
@@ -499,7 +501,7 @@ namespace Game
 
 		private void UpdateFallDeath()
 		{
-			if (_transform.position.y < 0.0f)
+			if (_transform.position.y < _fallDeathHeight)
 			{
 				_transform.position = _spawnPos;
 				_rigidBody.velocity = Vector2.zero;
