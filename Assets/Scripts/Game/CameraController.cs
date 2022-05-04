@@ -58,6 +58,11 @@ namespace Game
 
 			Vector3 camOffset = new Vector3(camWidth, camHeight, 0.0f);
 
+			if(Singleton.Instance.LevelController == null)
+			{
+				return default;
+			}
+
 			Bounds levelBounds = Singleton.Instance.LevelController.LevelBounds;
 			return new Bounds()
 			{

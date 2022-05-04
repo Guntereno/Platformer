@@ -102,7 +102,30 @@ namespace Game
 		public Vector2 Position => _transform.position;
 		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.OnGround);
 		private bool IsOnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
-		public bool IsGrippingWall => !IsOnGround && !IsCrouchHeld && IsOnWall;
+		
+		public bool IsGrippingWall
+		{
+			get
+			{
+				if (IsOnGround || IsCrouchHeld)
+				{
+					return false;
+				}
+
+				Flags32<ContactFlags> InputTest = default;
+				if (_moveVector.x < 0.0f)
+				{
+					InputTest.Set(ContactFlags.OnLeftWall);
+				}
+				else if (_moveVector.x > 0.0f)
+				{
+					InputTest.Set(ContactFlags.OnRightWall);
+				}
+
+				return (_contactFlags.TestAny(InputTest));
+			}
+		}
+
 		private bool IsCrouching => IsOnGround && IsCrouchHeld;
 		private bool IsInCoyoteTime => !IsOnGround && (Time.time - _lastTimeOnGround) < _coyoteTime;
 
@@ -193,7 +216,7 @@ namespace Game
 			UpdateAnimation();
 			UpdateFallDeath();
 
-			if (IsOnGround || IsInCoyoteTime || (IsOnWall && !IsCrouchHeld))
+			if (IsOnGround || IsInCoyoteTime || (IsGrippingWall && !IsCrouchHeld))
 			{
 				_airJumpCounter = 0;
 			}

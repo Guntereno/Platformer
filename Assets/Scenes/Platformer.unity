@@ -571,7 +571,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6aa56977d28c1e4cbc595cf1959c3a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _speed: 0.3
+  _speed: 0.75
 --- !u!1 &741693916
 GameObject:
   m_ObjectHideFlags: 0
@@ -9589,7 +9589,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6aa56977d28c1e4cbc595cf1959c3a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _speed: 0.4
+  _speed: 0.9
 --- !u!1 &1529187072
 GameObject:
   m_ObjectHideFlags: 0
@@ -9984,7 +9984,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6aa56977d28c1e4cbc595cf1959c3a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _speed: 0.2
+  _speed: 0.4
 --- !u!1 &1645140520
 GameObject:
   m_ObjectHideFlags: 0
@@ -10416,6 +10416,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2619971862393951112, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
+      propertyPath: m_CollisionDetection
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2619971862393951113, guid: 92e98917ed7839145935cce3b23e317a, type: 3}
       propertyPath: _fallDeathHeight
       value: -15
