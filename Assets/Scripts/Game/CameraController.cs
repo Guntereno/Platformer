@@ -79,6 +79,11 @@ namespace Game
 
 		void Update()
 		{
+			if(Singleton.Instance == null)
+			{
+				return;
+			}
+
 			GetHorizontalBounds(out float minX, out float maxX);
 
 			Vector3 cameraTarget = transform.position;

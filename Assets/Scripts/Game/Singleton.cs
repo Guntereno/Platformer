@@ -7,11 +7,11 @@ namespace Game
 	public class Singleton : MonoBehaviour
 	{
 		[SerializeField]
-		private CameraController _cameraController;
+		private CameraController _cameraController = null;
 		[SerializeField]
-		private LevelController _levelController;
+		private LevelController _levelController = null;
 		[SerializeField]
-		private AudioPools _audioPools;
+		private AudioPools _audioPools = null;
 
 		private static Singleton _instance;
 

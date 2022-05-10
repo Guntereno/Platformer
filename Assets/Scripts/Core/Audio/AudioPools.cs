@@ -5,7 +5,7 @@ namespace Core.Audio
 {
 	public class AudioPools: MonoBehaviour
 	{
-		[SerializeField] private RandomAudioClipPool[] Pools;
+		[SerializeField] private RandomAudioClipPool[] Pools = null;
 
 		private Dictionary<string, RandomAudioClipPool> _poolLookup;
 

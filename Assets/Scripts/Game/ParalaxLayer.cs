@@ -17,6 +17,11 @@ namespace Game
 
 		void Update()
 		{
+			if (Singleton.Instance == null)
+			{
+				return;
+			}
+
 			Bounds viewPortBounds = Singleton.Instance.CameraController.ViewportBounds;
 			Vector2 camPos = viewPortBounds.center;
 

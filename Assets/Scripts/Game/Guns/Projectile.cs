@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 
 namespace Game.Guns
@@ -8,8 +7,8 @@ namespace Game.Guns
 	[RequireComponent(typeof(Collider2D))]
 	public class Projectile : MonoBehaviour
 	{
-		[SerializeField] private string _audioPoolName;
-		[SerializeField] private AudioSource _audioSource;
+		[SerializeField] private string _audioPoolName = default;
+		[SerializeField] private AudioSource _audioSource = null;
 
 		private Transform _transform;
 		private Rigidbody2D _rigidbody2D;
