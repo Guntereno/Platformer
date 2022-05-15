@@ -198,6 +198,7 @@ MonoBehaviour:
   _wallJumpAngleRadians: 1.2
   _wallJumpImpulse: 20
   _wallJumpLaunchDuration: 0.25
+  _fallDeathHeight: -15
 --- !u!50 &2619971862393951112
 Rigidbody2D:
   serializedVersion: 4
@@ -217,7 +218,7 @@ Rigidbody2D:
   m_Material: {fileID: 6200000, guid: ef514670555d8154bb9c3152ec453ffe, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 0
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
   m_Constraints: 4
 --- !u!114 &2619971862393951159
 MonoBehaviour:

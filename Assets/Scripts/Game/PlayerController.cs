@@ -7,9 +7,7 @@ using UnityEngine.InputSystem;
 namespace Game
 {
 	[RequireComponent(typeof(Animator))]
-	[RequireComponent(typeof(CapsuleCollider2D))]
-	[RequireComponent(typeof(Rigidbody2D))]
-	public class PlayerController : MonoBehaviour
+	public class PlayerController : CharacterController
 	{
 		[Flags]
 		private enum ContactFlags
@@ -19,7 +17,9 @@ namespace Game
 			Unknown = 1 << 0,
 			OnGround = 1 << 1,
 			OnRightWall = 1 << 2,
-			OnLeftWall = 1 << 3
+			OnLeftWall = 1 << 3,
+
+			OnWall = OnRightWall | OnLeftWall
 		}
 
 		[Flags]
@@ -33,8 +33,6 @@ namespace Game
 		}
 
 		[SerializeField] private Animator _animator = null;
-		[SerializeField] private CapsuleCollider2D _bodyCollider = null;
-		[SerializeField] private Rigidbody2D _rigidBody = null;
 
 		[SerializeField] private float _deadzone = 0.2f;
 		[SerializeField] private float _maxSpeed = 1.0f;
@@ -66,10 +64,6 @@ namespace Game
 
 
 		private Vector2 _spawnPos = default;
-		private Transform _transform = null;
-
-		private float _bodyBoxWidth;
-		private float _bodyBoxHeight;
 
 		private int _animIsOnGroundId;
 		private int _animSpeedX;
@@ -93,7 +87,7 @@ namespace Game
 		private Flags32<ContactFlags> _contactFlags = ContactFlags.None;
 		private float _lastTimeOnGround = float.MinValue;
 
-		GroundCheckParams _groundCheckParams;
+		BoundingCircle _boundingCircle;
 
 		private Weapon _currentWeapon = null;
 
@@ -101,7 +95,7 @@ namespace Game
 		public Vector2 Position => _transform.position;
 		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.OnGround);
 		private bool IsOnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
-		
+
 		public bool IsGrippingWall
 		{
 			get
@@ -111,17 +105,7 @@ namespace Game
 					return false;
 				}
 
-				Flags32<ContactFlags> InputTest = default;
-				if (_moveVector.x < 0.0f)
-				{
-					InputTest.Set(ContactFlags.OnLeftWall);
-				}
-				else if (_moveVector.x > 0.0f)
-				{
-					InputTest.Set(ContactFlags.OnRightWall);
-				}
-
-				return (_contactFlags.TestAny(InputTest));
+				return (_contactFlags.TestAny(ContactFlags.OnWall));
 			}
 		}
 
@@ -154,18 +138,9 @@ namespace Game
 
 		#region Unity Callbacks
 
-		private void Start()
+		protected override void Start()
 		{
-			_transform = transform;
-			_rigidBody = GetComponent<Rigidbody2D>();
-
-			if (_bodyCollider.size.x > _bodyCollider.size.y)
-			{
-				throw new Exception("Collider should be taller than it is wide!");
-			}
-
-			_bodyBoxWidth = _bodyCollider.size.x;
-			_bodyBoxHeight = (_bodyCollider.size.y - _bodyCollider.size.x);
+			base.Start();
 
 			_spawnPos = _transform.position;
 
@@ -178,7 +153,7 @@ namespace Game
 			_groundAndPropsMask = LayerMask.GetMask("Ground", "Props");
 			_groundMask = LayerMask.GetMask("Ground");
 
-			_groundCheckParams = BuildGroundCheckParams();
+			_boundingCircle = BuildBoundingCircle();
 
 			SetWeaponIndex(0);
 		}
@@ -229,6 +204,7 @@ namespace Game
 			GUI.Label(new Rect(25, 25, 180, 20), $"IsOnGround: {IsOnGround}");
 			GUI.Label(new Rect(25, 45, 180, 20), $"Velocity: {_rigidBody.velocity}");
 			GUI.Label(new Rect(25, 65, 180, 20), $"Air Jump Counter: {_airJumpCounter}");
+			GUI.Label(new Rect(25, 85, 180, 20), $"Move Vector: {_moveVector}");
 #endif
 		}
 
@@ -304,7 +280,7 @@ namespace Game
 
 		private void SetWeaponIndex(int index)
 		{
-			if(_currentWeapon != null)
+			if (_currentWeapon != null)
 			{
 				_currentWeapon.gameObject.SetActive(false);
 			}
@@ -554,50 +530,11 @@ namespace Game
 			return result;
 		}
 
-		private struct GroundCheckParams
-		{
-			public Vector2 Origin;
-			public float Radius;
-		}
-
-		private struct WallCheckParams
-		{
-			public Vector2 BoxSize;
-			public Vector2 Origin;
-		}
-
-		private WallCheckParams BuildWallCheckParams(Vector2 dir)
-		{
-			if (Mathf.Abs(dir.y) > 0.0f)
-			{
-				throw new Exception("Side checks must be horizontal!");
-			}
-
-			WallCheckParams result;
-			result.BoxSize = new Vector2(_bodyBoxWidth * 0.5f, _bodyBoxHeight);
-			result.Origin =
-				(Vector2)_transform.position
-				+ (dir * (result.BoxSize.x * 0.5f));
-
-			return result;
-		}
-
-		private GroundCheckParams BuildGroundCheckParams()
-		{
-			GroundCheckParams result;
-
-			result.Origin = _bodyCollider.offset;
-			result.Origin.y -= (_bodyCollider.size.y - _bodyCollider.size.x) * 0.5f;
-			result.Radius = _bodyCollider.size.x * 0.5f;
-
-			return result;
-		}
-
 		private RaycastHit2D GroundCheck()
 		{
 			RaycastHit2D hit = Physics2D.CircleCast(
-				(Vector2)(_transform.position) + _groundCheckParams.Origin,
-				_groundCheckParams.Radius,
+				(Vector2)(_transform.position) + _boundingCircle.Origin,
+				_boundingCircle.Radius,
 				Vector2.down,
 				_contectCheckDistance, _groundAndPropsMask);
 
@@ -606,10 +543,10 @@ namespace Game
 
 		private RaycastHit2D ContactWallCheck(Vector2 dir)
 		{
-			WallCheckParams checkParams = BuildWallCheckParams(dir);
+			BoundingBox bodyBox = BuildBodyBox();
 
 			RaycastHit2D hit = Physics2D.BoxCast(
-				checkParams.Origin, checkParams.BoxSize,
+				bodyBox.Origin, bodyBox.BoxSize,
 				angle: 0.0f,
 				dir,
 				distance: _contectCheckDistance,
@@ -679,23 +616,23 @@ namespace Game
 		{
 			float startTheta = Mathf.PI;
 			Vector2 arcCenter = (Vector2)_transform.position
-				+ _groundCheckParams.Origin
+				+ _boundingCircle.Origin
 				+ (Vector2.down * _contectCheckDistance);
 			Core.DebugDraw.Arc(
 				arcCenter,
 				startTheta,
 				Mathf.PI,
-				_groundCheckParams.Radius,
+				_boundingCircle.Radius,
 				(hitOccured ? Color.green : Color.grey));
 		}
 
 		private void DebugDrawWallCheck(Vector2 dir, bool hitOccured)
 		{
-			WallCheckParams checkParams = BuildWallCheckParams(dir);
+			BoundingBox bodyBox = BuildBodyBox();
 
-			Vector2 start = checkParams.Origin + (dir * ((checkParams.BoxSize.x * 0.5f) + _contectCheckDistance));
-			start.y += checkParams.BoxSize.y * 0.5f;
-			Vector2 end = start + (Vector2.down * checkParams.BoxSize.y);
+			Vector2 start = bodyBox.Origin + (dir * ((bodyBox.BoxSize.x * 0.5f) + _contectCheckDistance));
+			start.y += bodyBox.BoxSize.y * 0.5f;
+			Vector2 end = start + (Vector2.down * bodyBox.BoxSize.y);
 			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
 		}
 
