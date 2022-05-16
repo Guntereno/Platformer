@@ -1,6 +1,5 @@
 using Game.Guns;
 using Momo.Core;
-using Momo.Core.Geometry;
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,19 +8,6 @@ namespace Game
 {
 	public class PlayerController : CharacterController
 	{
-		[Flags]
-		private enum ContactFlags
-		{
-			None = 0,
-
-			Unknown = 1 << 0,
-			OnGround = 1 << 1,
-			OnRightWall = 1 << 2,
-			OnLeftWall = 1 << 3,
-
-			OnWall = OnRightWall | OnLeftWall
-		}
-
 		[Flags]
 		private enum InputFlags
 		{
@@ -45,7 +31,6 @@ namespace Game
 		[SerializeField] private float _airborneAccelerationFactor = 1.0f;
 
 		[SerializeField] private float _coyoteTime = 0.0f;
-		[SerializeField] private float _contectCheckDistance = 0.1f;
 
 		[SerializeField] private Weapon[] _weapons = null;
 
@@ -71,12 +56,6 @@ namespace Game
 		private int _animIsCrouchingId;
 		private int _animIsGrippingWallId;
 
-		private int _groundAndPropsMask;
-		private int _groundMask;
-
-		private Vector2 _groundNormalLeft;
-		private Vector2 _groundNormalRight;
-
 		private Vector2 _moveVector = default;
 
 		private Flags32<InputFlags> _inputFlags = InputFlags.None;
@@ -84,17 +63,12 @@ namespace Game
 		private int _airJumpCounter = 0;
 		private float _lastTimeWallJumped = float.MinValue;
 
-		private Flags32<ContactFlags> _contactFlags = ContactFlags.None;
 		private float _lastTimeOnGround = float.MinValue;
-
-		Circle _boundingCircle;
 
 		private Weapon _currentWeapon = null;
 
 
 		public Vector2 Position => _transform.position;
-		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.OnGround);
-		private bool IsOnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
 
 		public bool IsGrippingWall
 		{
@@ -105,7 +79,7 @@ namespace Game
 					return false;
 				}
 
-				return (_contactFlags.TestAny(ContactFlags.OnWall));
+				return (CurrentContactFlags.TestAny(ContactFlags.OnWall));
 			}
 		}
 
@@ -130,9 +104,6 @@ namespace Game
 			set => _inputFlags.Assign(InputFlags.Fire, value);
 		}
 
-		private Vector2 GroundDirectionLeft => Vector2.Perpendicular(_groundNormalLeft);
-		private Vector2 GroundDirectionRight => -Vector2.Perpendicular(_groundNormalRight);
-
 		private bool HasJustWallJumped => (Time.time - _lastTimeWallJumped) < _wallJumpLaunchDuration;
 
 
@@ -150,21 +121,14 @@ namespace Game
 			_animIsCrouchingId = Animator.StringToHash("IsCrouching");
 			_animIsGrippingWallId = Animator.StringToHash("IsGrippingWall");
 
-			_groundAndPropsMask = LayerMask.GetMask("Ground", "Props");
-			_groundMask = LayerMask.GetMask("Ground");
-
-			_boundingCircle = BuildBoundingCircle();
-
 			SetWeaponIndex(0);
 		}
 
-		private void FixedUpdate()
+		protected override void FixedUpdate()
 		{
-			_contactFlags = CheckForContact();
+			base.FixedUpdate();
 
 			FixedUpdateVelocity();
-
-			ResetGroundNormals();
 
 			if (IsOnGround)
 			{
@@ -174,18 +138,10 @@ namespace Game
 			UpdateGravityScale();
 		}
 
-		private void OnCollisionEnter2D(Collision2D collision)
+		protected override void Update()
 		{
-			HandleGroundContacts(collision);
-		}
+			base.Update();
 
-		private void OnCollisionStay2D(Collision2D collision)
-		{
-			HandleGroundContacts(collision);
-		}
-
-		private void Update()
-		{
 			UpdateFiring();
 			UpdateAnimation();
 			UpdateFallDeath();
@@ -194,8 +150,6 @@ namespace Game
 			{
 				_airJumpCounter = 0;
 			}
-
-			DebugDraw();
 		}
 
 		void OnGUI()
@@ -292,7 +246,7 @@ namespace Game
 		{
 			Vector2 jumpDir = new Vector2(Mathf.Cos(_wallJumpAngleRadians), Mathf.Sin(_wallJumpAngleRadians));
 
-			if (_contactFlags == ContactFlags.OnRightWall)
+			if (CurrentContactFlags.TestAll(ContactFlags.OnRightWall))
 			{
 				jumpDir *= new Vector2(-1.0f, 1.0f);
 			}
@@ -375,7 +329,7 @@ namespace Game
 				acceleration = _moveVector.WithY(0.0f) * _acceleration;
 			}
 
-			acceleration = ClampIntoWall(_contactFlags, acceleration);
+			acceleration = ClampIntoWall(CurrentContactFlags, acceleration);
 
 			if (!IsOnGround)
 			{
@@ -457,11 +411,11 @@ namespace Game
 		{
 			if (IsOnWall)
 			{
-				if (_contactFlags.TestAll(ContactFlags.OnLeftWall))
+				if (CurrentContactFlags.TestAll(ContactFlags.OnLeftWall))
 				{
 					return ContactFlags.OnLeftWall;
 				}
-				else if (_contactFlags.TestAll(ContactFlags.OnRightWall))
+				else if (CurrentContactFlags.TestAll(ContactFlags.OnRightWall))
 				{
 					return ContactFlags.OnRightWall;
 				}
@@ -506,134 +460,15 @@ namespace Game
 			}
 		}
 
-		private Flags32<ContactFlags> CheckForContact()
-		{
-			Flags32<ContactFlags> result = ContactFlags.None;
-
-			if (GroundCheck())
-			{
-				result.Set(ContactFlags.OnGround);
-			}
-
-			RaycastHit2D rightHit = ContactWallCheck(Vector2.right);
-			if (rightHit)
-			{
-				result.Set(ContactFlags.OnRightWall);
-			}
-
-			RaycastHit2D leftHit = ContactWallCheck(Vector2.left);
-			if (leftHit)
-			{
-				result.Set(ContactFlags.OnLeftWall);
-			}
-
-			return result;
-		}
-
-		private RaycastHit2D GroundCheck()
-		{
-			RaycastHit2D hit = Physics2D.CircleCast(
-				(Vector2)(_transform.position) + _boundingCircle.Origin,
-				_boundingCircle.Radius,
-				Vector2.down,
-				_contectCheckDistance, _groundAndPropsMask);
-
-			return hit;
-		}
-
-		private RaycastHit2D ContactWallCheck(Vector2 dir)
-		{
-			Box bodyBox = BuildBodyBox();
-
-			RaycastHit2D hit = Physics2D.BoxCast(
-				bodyBox.Origin, bodyBox.Size,
-				angle: 0.0f,
-				dir,
-				distance: _contectCheckDistance,
-				layerMask: _groundMask);
-
-			return hit;
-		}
-
-		private void ResetGroundNormals()
-		{
-			_groundNormalLeft = _groundNormalRight = Vector2.up;
-		}
-
-		private void HandleGroundContacts(Collision2D collision)
-		{
-			foreach (ContactPoint2D contact in collision.contacts)
-			{
-				Debug.DrawRay(contact.point, contact.normal, Color.green);
-
-				float upDotNorm = Vector2.Dot(Vector2.up, contact.normal);
-				bool isGround = (contact.normal.y > 0.7f);
-				if (isGround)
-				{
-					if (contact.normal.x > _groundNormalLeft.x)
-					{
-						_groundNormalLeft = contact.normal;
-					}
-
-					if (contact.normal.x < _groundNormalRight.x)
-					{
-						_groundNormalRight = contact.normal;
-					}
-				}
-			}
-		}
-
-
 		#region Debug Drawing
 
-		private void DebugDraw()
+		protected override void DebugDraw()
 		{
+			base.DebugDraw();
+
 #if UNITY_EDITOR
-			DebugDrawCollisionChecks();
-			DebugDrawGroundNormals();
 			DebugDrawWallJump();
 #endif
-		}
-
-		private void DebugDrawCollisionChecks()
-		{
-			DebugDrawGroundCheck(_contactFlags.TestAll(ContactFlags.OnGround));
-			DebugDrawWallCheck(Vector2.left, _contactFlags.TestAll(ContactFlags.OnLeftWall));
-			DebugDrawWallCheck(Vector2.right, _contactFlags.TestAll(ContactFlags.OnRightWall));
-		}
-
-		private void DebugDrawGroundNormals()
-		{
-			Vector2 groundNormalStart = (Vector2)_transform.position
-				+ _bodyCollider.offset
-				- (_bodyCollider.size * 0.5f).WithX(0.0f);
-
-			Debug.DrawLine(groundNormalStart, groundNormalStart + GroundDirectionLeft, Color.cyan);
-			Debug.DrawLine(groundNormalStart, groundNormalStart + GroundDirectionRight, Color.cyan);
-		}
-
-		private void DebugDrawGroundCheck(bool hitOccured)
-		{
-			float startTheta = Mathf.PI;
-			Vector2 arcCenter = (Vector2)_transform.position
-				+ _boundingCircle.Origin
-				+ (Vector2.down * _contectCheckDistance);
-			Momo.Core.DebugDraw.Arc(
-				arcCenter,
-				startTheta,
-				Mathf.PI,
-				_boundingCircle.Radius,
-				(hitOccured ? Color.green : Color.grey));
-		}
-
-		private void DebugDrawWallCheck(Vector2 dir, bool hitOccured)
-		{
-			Box bodyBox = BuildBodyBox();
-
-			Vector2 start = bodyBox.Origin + (dir * ((bodyBox.Size.x * 0.5f) + _contectCheckDistance));
-			start.y += bodyBox.Size.y * 0.5f;
-			Vector2 end = start + (Vector2.down * bodyBox.Size.y);
-			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
 		}
 
 		private void DebugDrawWallJump()

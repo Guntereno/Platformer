@@ -15,7 +15,6 @@ namespace Game.Enemies
 		[SerializeField] private float _permittedDropHeight = 0.0f;
 
 		private int _animIsWalkingId;
-		private LayerMask _groundMask;
 
 		private bool FacingRight => _transform.localScale.x > 0.0f;
 		private float FacingSign => Mathf.Sign(_transform.localScale.x);
@@ -27,14 +26,12 @@ namespace Game.Enemies
 			base.Start();
 
 			_animIsWalkingId = Animator.StringToHash("IsWalking");
-
-			_groundMask = LayerMask.GetMask("Ground");
 		}
 
-		private void Update()
+		protected override void Update()
 		{
 			Box bodyBox = BuildBodyBox();
-			DebugDraw.Box(bodyBox, Color.magenta);
+			Momo.Core.DebugDraw.Box(bodyBox, Color.magenta);
 			
 			bool isWalking = false;
 
@@ -78,7 +75,7 @@ namespace Game.Enemies
 				castOrigin,
 				Vector2.down,
 				castLength,
-				_groundMask);
+				GroundMask);
 
 			bool hitOccured = hit;
 
