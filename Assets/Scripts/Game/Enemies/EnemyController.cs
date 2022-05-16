@@ -33,24 +33,43 @@ namespace Game.Enemies
 
 		private void Update()
 		{
-			_animator.SetBool(_animIsWalkingId, true);
-
-			bool shouldTurn = CheckForTurn();
-			if (shouldTurn)
-			{
-				_transform.localScale = _transform.localScale.WithX(-1.0f * _transform.localScale.x);
-			}
-			_rigidBody.velocity = new Vector2(_speed * FacingSign, 0.0f);
-		}
-
-		private bool CheckForTurn()
-		{
 			Box bodyBox = BuildBodyBox();
 			DebugDraw.Box(bodyBox, Color.magenta);
+			
+			bool isWalking = false;
 
+			bool hasGround = CheckGround(bodyBox, FacingRight);
+			if (hasGround)
+			{
+				isWalking = true;
+			}
+			else
+			{
+				bool hasGroundBehind = CheckGround(bodyBox, !FacingRight);
+				if(hasGroundBehind)
+				{
+					TurnAround();
+					isWalking = true;
+				}
+			}
+
+			_animator.SetBool(_animIsWalkingId, isWalking);
+			if(isWalking)
+			{
+				_rigidBody.velocity = new Vector2(_speed * FacingSign, 0.0f);
+			}
+		}
+
+		private void TurnAround()
+		{
+			_transform.localScale = _transform.localScale.WithX(-1.0f * _transform.localScale.x);
+		}
+
+		private bool CheckGround(Box bodyBox, bool toRight)
+		{
 			Vector2 castOrigin = new Vector2
 			{
-				x = FacingRight ? bodyBox.Right : bodyBox.Left,
+				x = toRight ? bodyBox.Right : bodyBox.Left,
 				y = bodyBox.Bottom
 			};
 
@@ -67,7 +86,7 @@ namespace Game.Enemies
 			Debug.DrawLine(castOrigin, castOrigin + (Vector2.down * castLength), hitOccured ? Color.green : Color.red);
 #endif
 
-			return !hitOccured;
+			return hitOccured;
 		}
 
 		#endregion
