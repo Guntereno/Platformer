@@ -15,6 +15,7 @@ namespace Game.Enemies
 		[SerializeField] private float _permittedDropHeight = 0.0f;
 
 		private int _animIsWalkingId;
+		private int _animIsOnGroundId;
 
 		private bool FacingRight => _transform.localScale.x > 0.0f;
 		private float FacingSign => Mathf.Sign(_transform.localScale.x);
@@ -26,35 +27,41 @@ namespace Game.Enemies
 			base.Start();
 
 			_animIsWalkingId = Animator.StringToHash("IsWalking");
+			_animIsOnGroundId = Animator.StringToHash("IsOnGround");
 		}
 
 		protected override void Update()
 		{
 			Box bodyBox = BuildBodyBox();
 			Momo.Core.DebugDraw.Box(bodyBox, Color.magenta);
-			
+
 			bool isWalking = false;
 
-			bool hasGround = CheckGround(bodyBox, FacingRight);
-			if (hasGround)
+			if (IsOnGround)
 			{
-				isWalking = true;
-			}
-			else
-			{
-				bool hasGroundBehind = CheckGround(bodyBox, !FacingRight);
-				if(hasGroundBehind)
+				bool hasGround = CheckGround(bodyBox, FacingRight);
+				if (hasGround)
 				{
-					TurnAround();
 					isWalking = true;
+				}
+				else
+				{
+					bool hasGroundBehind = CheckGround(bodyBox, !FacingRight);
+					if (hasGroundBehind)
+					{
+						TurnAround();
+						isWalking = true;
+					}
+				}
+
+				if (isWalking)
+				{
+					_rigidBody.velocity = new Vector2(_speed * FacingSign, 0.0f);
 				}
 			}
 
 			_animator.SetBool(_animIsWalkingId, isWalking);
-			if(isWalking)
-			{
-				_rigidBody.velocity = new Vector2(_speed * FacingSign, 0.0f);
-			}
+			_animator.SetBool(_animIsOnGroundId, IsOnGround);
 		}
 
 		private void TurnAround()
