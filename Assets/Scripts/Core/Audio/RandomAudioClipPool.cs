@@ -1,8 +1,6 @@
 ﻿using UnityEngine;
 
-using Random = Core.Random;
-
-namespace Core.Audio
+namespace Momo.Core.Audio
 {
 	[CreateAssetMenu(menuName = "Audio/RandomAudioClipPool")]
 	public class RandomAudioClipPool: ScriptableObject

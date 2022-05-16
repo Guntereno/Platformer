@@ -1,33 +1,23 @@
 ﻿using System;
 using UnityEngine;
+using Momo.Core.Geometry;
 
 namespace Game
 {
 	[RequireComponent(typeof(CapsuleCollider2D)), RequireComponent(typeof(Rigidbody2D))]
 	public class CharacterController : MonoBehaviour
 	{
-		protected struct BoundingCircle
-		{
-			public Vector2 Origin;
-			public float Radius;
-		}
-
-		protected struct BoundingBox
-		{
-			public Vector2 BoxSize;
-			public Vector2 Origin;
-		}
-
 		protected Transform _transform = null;
 		protected CapsuleCollider2D _bodyCollider = null;
 		protected Rigidbody2D _rigidBody = null;
 
 		// Body box is the oblong part of the capsule (without the caps)
-		private float _bodyBoxWidth;
-		private float _bodyBoxHeight;
-
-		public Vector2 BodyBoxSize => new Vector2(_bodyBoxWidth, _bodyBoxHeight);
-		public Vector2 Origin => (Vector2)_transform.position;
+		public Vector2 BodyBoxSize => _bodyBoxSize;
+		public float CapHeight => _capHeight;
+		public Vector2 Origin => _bodyCollider.offset + (Vector2)_transform.position;
+		
+		private Vector2 _bodyBoxSize;
+		private float _capHeight;
 
 		#region Unity Callbacks
 
@@ -42,8 +32,9 @@ namespace Game
 				throw new Exception("Only capsules which are taller than they are wide are currently supported!");
 			}
 
-			_bodyBoxWidth = _bodyCollider.size.x;
-			_bodyBoxHeight = (_bodyCollider.size.y - _bodyCollider.size.x);
+			_bodyBoxSize.x = _bodyCollider.size.x;
+			_bodyBoxSize.y = (_bodyCollider.size.y - _bodyCollider.size.x);
+			_capHeight = (_bodyCollider.size.y - _bodyBoxSize.y) * 0.5f;
 		}
 
 		#endregion
@@ -51,33 +42,24 @@ namespace Game
 
 		#region Helpers
 
-		protected BoundingBox BuildBodyBox()
+		protected Box BuildBodyBox()
 		{
-			BoundingBox result;
-			result.BoxSize = BodyBoxSize;
-			result.Origin = Origin;
-
-			return result;
+			return new Box
+			{
+				Size = _bodyBoxSize,
+				Origin = Origin
+			};
 		}
 
-		protected BoundingCircle BuildBoundingCircle()
+		protected Circle BuildBoundingCircle()
 		{
-			BoundingCircle result;
+			Circle result;
 
 			result.Origin = _bodyCollider.offset;
 			result.Origin.y -= (_bodyCollider.size.y - _bodyCollider.size.x) * 0.5f;
 			result.Radius = _bodyCollider.size.x * 0.5f;
 
 			return result;
-		}
-
-		protected Vector2 GetEdgePoint(Vector2 dir)
-		{
-			return
-				Origin +
-				new Vector2(
-					dir.x * (_bodyCollider.size.x * 0.5f),
-					dir.y * (_bodyCollider.size.y * 0.5f));
 		}
 
 		#endregion

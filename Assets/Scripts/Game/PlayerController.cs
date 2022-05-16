@@ -1,5 +1,6 @@
 using Game.Guns;
 using Momo.Core;
+using Momo.Core.Geometry;
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -86,7 +87,7 @@ namespace Game
 		private Flags32<ContactFlags> _contactFlags = ContactFlags.None;
 		private float _lastTimeOnGround = float.MinValue;
 
-		BoundingCircle _boundingCircle;
+		Circle _boundingCircle;
 
 		private Weapon _currentWeapon = null;
 
@@ -542,10 +543,10 @@ namespace Game
 
 		private RaycastHit2D ContactWallCheck(Vector2 dir)
 		{
-			BoundingBox bodyBox = BuildBodyBox();
+			Box bodyBox = BuildBodyBox();
 
 			RaycastHit2D hit = Physics2D.BoxCast(
-				bodyBox.Origin, bodyBox.BoxSize,
+				bodyBox.Origin, bodyBox.Size,
 				angle: 0.0f,
 				dir,
 				distance: _contectCheckDistance,
@@ -617,7 +618,7 @@ namespace Game
 			Vector2 arcCenter = (Vector2)_transform.position
 				+ _boundingCircle.Origin
 				+ (Vector2.down * _contectCheckDistance);
-			Core.DebugDraw.Arc(
+			Momo.Core.DebugDraw.Arc(
 				arcCenter,
 				startTheta,
 				Mathf.PI,
@@ -627,11 +628,11 @@ namespace Game
 
 		private void DebugDrawWallCheck(Vector2 dir, bool hitOccured)
 		{
-			BoundingBox bodyBox = BuildBodyBox();
+			Box bodyBox = BuildBodyBox();
 
-			Vector2 start = bodyBox.Origin + (dir * ((bodyBox.BoxSize.x * 0.5f) + _contectCheckDistance));
-			start.y += bodyBox.BoxSize.y * 0.5f;
-			Vector2 end = start + (Vector2.down * bodyBox.BoxSize.y);
+			Vector2 start = bodyBox.Origin + (dir * ((bodyBox.Size.x * 0.5f) + _contectCheckDistance));
+			start.y += bodyBox.Size.y * 0.5f;
+			Vector2 end = start + (Vector2.down * bodyBox.Size.y);
 			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
 		}
 

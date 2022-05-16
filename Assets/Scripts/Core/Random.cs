@@ -1,43 +1,43 @@
 ﻿using System;
 
-namespace Core
+namespace Momo.Core
 {
 	public static class Random
 	{
-        public static void Shuffle<T>(System.Random random, T[] array, T[] selectionPool)
-        {
-            // Implementation of Fisher-Yates shuffle in place
-            // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+		public static void Shuffle<T>(System.Random random, T[] array, T[] selectionPool)
+		{
+			// Implementation of Fisher-Yates shuffle in place
+			// https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
 
-            if (array.Length <= 1)
-            {
-                return;
-            }
-
-            if(array.Length != selectionPool.Length)
+			if (array.Length <= 1)
 			{
-                throw new ArgumentException("Arrays must be the same size!");
+				return;
 			}
 
-            int length = array.Length;
-            Array.Copy(array, selectionPool, length);
+			if (array.Length != selectionPool.Length)
+			{
+				throw new ArgumentException("Arrays must be the same size!");
+			}
 
-            int selectionCount = length;
-            do
-            {
-                // Choose a random point from the selection pool
-                int selectionIndex = random.Next(0, (selectionCount - 1));
-                T selection = selectionPool[selectionIndex];
+			int length = array.Length;
+			Array.Copy(array, selectionPool, length);
 
-                // Assign it to the destination pool
-                int destinationIndex = length - selectionCount;
-                array[destinationIndex] = selection;
+			int selectionCount = length;
+			do
+			{
+				// Choose a random point from the selection pool
+				int selectionIndex = random.Next(0, (selectionCount - 1));
+				T selection = selectionPool[selectionIndex];
 
-                // Move end into selection position
-                selectionPool[selectionIndex] = selectionPool[selectionCount - 1];
+				// Assign it to the destination pool
+				int destinationIndex = length - selectionCount;
+				array[destinationIndex] = selection;
 
-                --selectionCount;
-            } while (selectionCount > 0);
-        }
-    }
+				// Move end into selection position
+				selectionPool[selectionIndex] = selectionPool[selectionCount - 1];
+
+				--selectionCount;
+			} while (selectionCount > 0);
+		}
+	}
 }

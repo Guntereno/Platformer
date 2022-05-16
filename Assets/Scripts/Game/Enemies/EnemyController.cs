@@ -1,4 +1,5 @@
 ﻿using Momo.Core;
+using Momo.Core.Geometry;
 using UnityEngine;
 
 namespace Game.Enemies
@@ -7,13 +8,17 @@ namespace Game.Enemies
 	{
 		[SerializeField] private Animator _animator = null;
 
+		[Min(0.0f)]
 		[SerializeField] private float _speed = 0.2f;
+
+		[Min(0.0f)]
 		[SerializeField] private float _permittedDropHeight = 0.0f;
 
 		private int _animIsWalkingId;
+		private LayerMask _groundMask;
 
-		private float FacingFactor => _transform.localScale.x;
-
+		private bool FacingRight => _transform.localScale.x > 0.0f;
+		private float FacingSign => Mathf.Sign(_transform.localScale.x);
 
 		#region Unity Callbacks
 
@@ -22,6 +27,8 @@ namespace Game.Enemies
 			base.Start();
 
 			_animIsWalkingId = Animator.StringToHash("IsWalking");
+
+			_groundMask = LayerMask.GetMask("Ground");
 		}
 
 		private void Update()
@@ -33,23 +40,31 @@ namespace Game.Enemies
 			{
 				_transform.localScale = _transform.localScale.WithX(-1.0f * _transform.localScale.x);
 			}
-			_rigidBody.velocity = new Vector2(_speed * FacingFactor, 0.0f);
+			_rigidBody.velocity = new Vector2(_speed * FacingSign, 0.0f);
 		}
 
 		private bool CheckForTurn()
 		{
-			Vector2 castOrigin = GetEdgePoint(new Vector2(FacingFactor, 0.0f));
-			float halfHeight = _bodyCollider.bounds.size.y * 0.5f;
+			Box bodyBox = BuildBodyBox();
+			DebugDraw.Box(bodyBox, Color.magenta);
 
+			Vector2 castOrigin = new Vector2
+			{
+				x = FacingRight ? bodyBox.Right : bodyBox.Left,
+				y = bodyBox.Bottom
+			};
+
+			float castLength = CapHeight + _permittedDropHeight;
 			RaycastHit2D hit = Physics2D.Raycast(
 				castOrigin,
 				Vector2.down,
-				_permittedDropHeight);
+				castLength,
+				_groundMask);
 
 			bool hitOccured = hit;
 
 #if UNITY_EDITOR
-			Debug.DrawLine(castOrigin, castOrigin + (Vector2.down * _permittedDropHeight), hitOccured ? Color.green : Color.red);
+			Debug.DrawLine(castOrigin, castOrigin + (Vector2.down * castLength), hitOccured ? Color.green : Color.red);
 #endif
 
 			return !hitOccured;

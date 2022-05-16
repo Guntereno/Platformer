@@ -1,7 +1,7 @@
-﻿using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
+using Momo.Core.Geometry;
 
-namespace Core
+namespace Momo.Core
 {
 	public static class DebugDraw
 	{
@@ -50,6 +50,32 @@ namespace Core
 		private static Vector2 PointOnCircle(Vector2 pos, float radius, float theta)
 		{
 			return pos + (PointOnUnitCircle(theta) * radius);
+		}
+
+		public static void Box(Box box, Color color)
+		{
+			Box(box.Origin, box.Size, color);
+		}
+
+		public static void Box(Vector2 origin, Vector2 size, Color color)
+		{
+			float halfX = size.x * 0.5f;
+			float halfY = size.y * 0.5f;
+
+			float top = origin.y + halfY;
+			float right = origin.x + halfX;
+			float bottom = origin.y - halfY;
+			float left = origin.x - halfX;
+
+			Vector2 topLeft = new Vector2(left, top);
+			Vector2 topRight = new Vector2(right, top);
+			Vector2 bottomRight = new Vector2(right, bottom);
+			Vector2 bottomLeft = new Vector2(left, bottom);
+
+			Debug.DrawLine(topLeft, topRight, color);
+			Debug.DrawLine(topRight, bottomRight, color);
+			Debug.DrawLine(bottomRight, bottomLeft, color);
+			Debug.DrawLine(bottomLeft, topLeft, color);
 		}
 	}
 }

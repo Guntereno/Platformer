@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
-using Core.Audio;
 using System.Collections;
 using Momo.Core;
+using Momo.Core.Audio;
+using Random = UnityEngine.Random;
 
 namespace Game.Guns
 {

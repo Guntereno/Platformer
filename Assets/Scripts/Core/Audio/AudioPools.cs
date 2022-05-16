@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Core.Audio
+namespace Momo.Core.Audio
 {
 	public class AudioPools: MonoBehaviour
 	{
