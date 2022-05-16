@@ -6,7 +6,6 @@ using UnityEngine.InputSystem;
 
 namespace Game
 {
-	[RequireComponent(typeof(Animator))]
 	public class PlayerController : CharacterController
 	{
 		[Flags]
@@ -190,7 +189,7 @@ namespace Game
 			UpdateAnimation();
 			UpdateFallDeath();
 
-			if (IsOnGround || IsInCoyoteTime || (IsGrippingWall && !IsCrouchHeld))
+			if (IsOnGround || IsInCoyoteTime || IsGrippingWall)
 			{
 				_airJumpCounter = 0;
 			}
