@@ -150,6 +150,34 @@ namespace Game
 			return result;
 		}
 
+		protected RaycastHit2D ContactWallCheck(Vector2 dir, int layerMask, bool debugRender = false)
+		{
+			Box bodyBox = BuildBodyBox();
+
+			const float offset = 0.1f;
+			Vector2 overrideSize = new Vector2(
+				bodyBox.Size.x - offset,
+				bodyBox.Size.y);
+			float overrideDistance = _contactCheckDistance + offset;
+
+			RaycastHit2D hit = Physics2D.BoxCast(
+				bodyBox.Origin, bodyBox.Size,
+				angle: 0.0f,
+				dir,
+				distance: overrideDistance,
+				layerMask: layerMask);
+
+
+#if UNITY_EDITOR
+			if (debugRender)
+			{
+				Momo.Core.DebugDraw.BoxCast(bodyBox.Origin, overrideSize, dir, overrideDistance, Color.magenta);
+			}
+#endif
+
+			return hit;
+		}
+
 		private Flags32<ContactFlags> CheckForContact()
 		{
 			Flags32<ContactFlags> result = ContactFlags.None;
@@ -159,13 +187,13 @@ namespace Game
 				result.Set(ContactFlags.OnGround);
 			}
 
-			RaycastHit2D rightHit = ContactWallCheck(Vector2.right);
+			RaycastHit2D rightHit = ContactWallCheck(Vector2.right, _groundMask);
 			if (rightHit)
 			{
 				result.Set(ContactFlags.OnRightWall);
 			}
 
-			RaycastHit2D leftHit = ContactWallCheck(Vector2.left);
+			RaycastHit2D leftHit = ContactWallCheck(Vector2.left, _groundMask);
 			if (leftHit)
 			{
 				result.Set(ContactFlags.OnLeftWall);
@@ -181,20 +209,6 @@ namespace Game
 				_boundingCircle.Radius,
 				Vector2.down,
 				_contactCheckDistance, _groundAndPropsMask);
-
-			return hit;
-		}
-
-		private RaycastHit2D ContactWallCheck(Vector2 dir)
-		{
-			Box bodyBox = BuildBodyBox();
-
-			RaycastHit2D hit = Physics2D.BoxCast(
-				bodyBox.Origin, bodyBox.Size,
-				angle: 0.0f,
-				dir,
-				distance: _contactCheckDistance,
-				layerMask: _groundMask);
 
 			return hit;
 		}

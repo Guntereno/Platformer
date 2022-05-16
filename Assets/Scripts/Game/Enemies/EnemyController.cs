@@ -14,11 +14,14 @@ namespace Game.Enemies
 		[Min(0.0f)]
 		[SerializeField] private float _permittedDropHeight = 0.0f;
 
-		private int _animIsWalkingId;
+		private int _animWalkSpeedId;
 		private int _animIsOnGroundId;
+		
+		private int _turnAroundMask;
 
 		private bool FacingRight => _transform.localScale.x > 0.0f;
 		private float FacingSign => Mathf.Sign(_transform.localScale.x);
+		private Vector2 Forward => new Vector2(FacingSign, 0.0f);
 
 		#region Unity Callbacks
 
@@ -26,8 +29,10 @@ namespace Game.Enemies
 		{
 			base.Start();
 
-			_animIsWalkingId = Animator.StringToHash("IsWalking");
+			_animWalkSpeedId = Animator.StringToHash("WalkSpeed");
 			_animIsOnGroundId = Animator.StringToHash("IsOnGround");
+
+			_turnAroundMask = LayerMask.GetMask("Enemies", "Props");
 		}
 
 		protected override void Update()
@@ -37,36 +42,48 @@ namespace Game.Enemies
 
 			bool isWalking = false;
 
+			// Get speed _before_ we override it, so we can know if we've stopped
+			float walkSpeed = Mathf.Abs(_rigidBody.velocity.x);
+
 			if (IsOnGround)
 			{
-				bool hasGround = CheckGround(bodyBox, FacingRight);
-				if (hasGround)
+				isWalking = CanWalkInDirection(bodyBox, FacingRight);
+				if (!isWalking)
 				{
-					isWalking = true;
-				}
-				else
-				{
-					bool hasGroundBehind = CheckGround(bodyBox, !FacingRight);
-					if (hasGroundBehind)
+					isWalking = CanWalkInDirection(bodyBox, !FacingRight);
+					if (isWalking)
 					{
 						TurnAround();
-						isWalking = true;
 					}
 				}
 
-				if (isWalking)
-				{
-					_rigidBody.velocity = new Vector2(_speed * FacingSign, 0.0f);
-				}
+				float speed = isWalking ? _speed * FacingSign : 0.0f;
+				_rigidBody.velocity = new Vector2(speed, 0.0f);
 			}
 
-			_animator.SetBool(_animIsWalkingId, isWalking);
+			_animator.SetFloat(_animWalkSpeedId, walkSpeed);
 			_animator.SetBool(_animIsOnGroundId, IsOnGround);
 		}
 
 		private void TurnAround()
 		{
 			_transform.localScale = _transform.localScale.WithX(-1.0f * _transform.localScale.x);
+		}
+
+
+		private bool CanWalkInDirection(Box bodyBox, bool toRight)
+		{
+			bool hasGround = CheckGround(bodyBox, toRight);
+			if (hasGround)
+			{
+				RaycastHit2D hit = ContactWallCheck(toRight ? Vector2.right : Vector2.left, _turnAroundMask);
+				if (!hit)
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private bool CheckGround(Box bodyBox, bool toRight)

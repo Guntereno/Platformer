@@ -77,5 +77,11 @@ namespace Momo.Core
 			Debug.DrawLine(bottomRight, bottomLeft, color);
 			Debug.DrawLine(bottomLeft, topLeft, color);
 		}
+
+		public static void BoxCast(Vector2 origin, Vector2 size, Vector2 dir, float distance, Color color)
+		{
+			origin += dir * distance;
+			Box(origin, size, color);
+		}
 	}
 }

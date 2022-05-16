@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4118260167874090510}
   - component: {fileID: 4118260167874090511}
   - component: {fileID: 4118260167874090508}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Walker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -83,6 +83,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df0dbb9a819d42549a29989728c72a44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _contactCheckDistance: 0.1
   _animator: {fileID: 6591179665594011389}
   _speed: 1
   _permittedDropHeight: 0.2
