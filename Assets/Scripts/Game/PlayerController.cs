@@ -154,7 +154,7 @@ namespace Game
 		void OnGUI()
 		{
 #if UNITY_EDITOR
-			GUI.Label(new Rect(25, 25, 180, 20), $"IsOnGround: {IsOnGround}");
+			GUI.Label(new Rect(25, 25, 180, 20), $"Contact Flags: {CurrentContactFlags}");
 			GUI.Label(new Rect(25, 45, 180, 20), $"Velocity: {_rigidBody.velocity}");
 			GUI.Label(new Rect(25, 65, 180, 20), $"Air Jump Counter: {_airJumpCounter}");
 			GUI.Label(new Rect(25, 85, 180, 20), $"Move Vector: {_moveVector}");

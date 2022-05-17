@@ -3,7 +3,7 @@ using Momo.Core.Geometry;
 
 namespace Momo.Core
 {
-	public static class DebugDraw
+	public static class DrawDebug
 	{
 		public static void Circle(Vector2 pos, float radius, Color color, int segments = 24)
 		{

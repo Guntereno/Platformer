@@ -47,9 +47,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09e9b2b7a04cf0648bc9caf78f0030f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _contactCheckDistance: 0.1
+  _maxSpeed: 11
   _animator: {fileID: 2619971862419907296}
   _deadzone: 0.2
-  _maxSpeed: 11
   _acceleration: 150
   _jumpImpulse: 14
   _numAirJumps: 1
@@ -57,7 +58,6 @@ MonoBehaviour:
   _lowJumpFactor: 0.05
   _airborneAccelerationFactor: 0.5
   _coyoteTime: 0.08
-  _contectCheckDistance: 0.15
   _weapons:
   - {fileID: 5232282438038106007}
   - {fileID: 8573154131504116638}

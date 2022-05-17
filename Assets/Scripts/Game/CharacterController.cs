@@ -177,7 +177,7 @@ namespace Game
 #if UNITY_EDITOR
 			if (debugRender)
 			{
-				Momo.Core.DebugDraw.BoxCast(bodyBox.Origin, overrideSize, dir, overrideDistance, Color.magenta);
+				DrawDebug.BoxCast(bodyBox.Origin, overrideSize, dir, overrideDistance, Color.magenta);
 			}
 #endif
 
@@ -270,7 +270,7 @@ namespace Game
 			Vector2 arcCenter = (Vector2)_transform.position
 				+ _boundingCircle.Origin
 				+ (Vector2.down * _contactCheckDistance);
-			Momo.Core.DebugDraw.Arc(
+			DrawDebug.Arc(
 				arcCenter,
 				startTheta,
 				Mathf.PI,
