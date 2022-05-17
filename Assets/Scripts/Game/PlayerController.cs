@@ -153,19 +153,7 @@ namespace Game
 
 		void OnGUI()
 		{
-#if UNITY_EDITOR
-			const int indent = 25;
-			const int labelWidth = 800;
-			const int labelHeight = 20;
-
-			int baseLine = 25;
-
-			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Contact Flags: {CurrentContactFlags}");
-			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Velocity: {_rigidBody.velocity}");
-			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Air Jump Counter: {_airJumpCounter}");
-			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Move Vector: {_moveVector}");
-			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Gripping Wall: {IsGrippingWall}");
-#endif
+			DebugGui();
 		}
 
 		#endregion
@@ -224,6 +212,19 @@ namespace Game
 		}
 
 		#endregion
+
+		protected override void DebugGui()
+		{
+#if UNITY_EDITOR
+			GUILayout.Label($"Contact Flags: {CurrentContactFlags}");
+			GUILayout.Label($"Velocity: {_rigidBody.velocity}");
+			GUILayout.Label($"Air Jump Counter: {_airJumpCounter}");
+			GUILayout.Label($"Move Vector: {_moveVector}");
+			GUILayout.Label($"Gripping Wall: {IsGrippingWall}");
+
+			base.DebugGui();
+#endif
+		}
 
 		private void NextWeapon()
 		{

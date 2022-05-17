@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Momo.Core.Geometry;
+using UnityEngine.Assertions;
 
 namespace Momo.Core
 {
@@ -78,10 +79,12 @@ namespace Momo.Core
 			Debug.DrawLine(bottomLeft, topLeft, color);
 		}
 
-		public static void BoxCast(Vector2 origin, Vector2 size, Vector2 dir, float distance, Color color)
+		public static void BoxCast(Vector2 origin, Vector2 size, float angle, Vector2 direction, float distance, Color color)
 		{
-			Box(origin, size, color);
-			origin += dir * distance;
+			Assert.AreEqual(angle, 0.0f, "Only unrotated boxes are supported!");
+
+			Box(origin, size, color.WithA(0.5f));
+			origin += direction * distance;
 			Box(origin, size, color);
 		}
 	}

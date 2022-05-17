@@ -4,6 +4,7 @@ using System;
 using UnityEngine;
 using Momo.Core.Geometry;
 using Momo.Core;
+using UnityEditor;
 
 namespace Game
 {
@@ -23,12 +24,25 @@ namespace Game
 			OnWall = OnRightWall | OnLeftWall
 		}
 
+		[Flags]
+		private enum DrawDebugFlags
+		{
+			None = 0,
+
+			GroundCheck = 1 << 0,
+			RightWallCheck = 1 << 1,
+			LeftWallCheck = 1 << 2
+		}
 
 		[Min(0.0f)]
 		[SerializeField] private float _contactCheckDistance = 0.1f;
 
 		[Min(0.0f)]
 		[SerializeField] private float _maxSpeed = 1.0f;
+
+		[SerializeField]
+		private DrawDebugFlags _drawDebugFlags;
+
 
 		protected Transform _transform = null;
 		protected CapsuleCollider2D _bodyCollider = null;
@@ -119,15 +133,24 @@ namespace Game
 		}
 #endif
 
+		protected virtual void OnGUI()
+		{
+			// Do nothing
+		}
+
 		#endregion
 
 
 		#region Helpers
 
+		protected virtual void DebugGui()
+		{
+			// Do nothing
+		}
+
 		protected virtual void DebugDraw()
 		{
 #if UNITY_EDITOR
-			DebugDrawCollisionChecks();
 #if TRACK_GROUND_NORMALS
 			DebugDrawGroundNormals();
 #endif
@@ -160,26 +183,19 @@ namespace Game
 
 			// Bring the box in by an offset, to ensure the box doesn't start in collision with another
 			// body, thus preventing the cast from registering.
-			const float offset = 0.1f;
+			const float offset = 0.2f;
 			Vector2 overrideSize = new Vector2(
 				bodyBox.Size.x - offset,
 				bodyBox.Size.y);
 			float overrideDistance = _contactCheckDistance + offset;
 
-			RaycastHit2D hit = Physics2D.BoxCast(
+			RaycastHit2D hit = Cast.Box(
 				bodyBox.Origin, overrideSize,
 				angle: 0.0f,
 				dir,
 				distance: overrideDistance,
-				layerMask: layerMask);
-
-
-#if UNITY_EDITOR
-			if (debugRender)
-			{
-				DrawDebug.BoxCast(bodyBox.Origin, overrideSize, dir, overrideDistance, Color.magenta);
-			}
-#endif
+				layerMask: layerMask,
+				debug: debugRender);
 
 			return hit;
 		}
@@ -222,6 +238,11 @@ namespace Game
 		}
 
 
+		bool CheckDebugDrawFlag(DrawDebugFlags flags)
+		{
+			return ((_drawDebugFlags & flags) == flags);
+		}
+
 		private Flags32<ContactFlags> CheckForContact()
 		{
 			Flags32<ContactFlags> result = ContactFlags.None;
@@ -231,13 +252,15 @@ namespace Game
 				result.Set(ContactFlags.OnGround);
 			}
 
-			RaycastHit2D rightHit = ContactWallCheck(Vector2.right, _groundMask);
+			bool drawRightDebug = CheckDebugDrawFlag(DrawDebugFlags.RightWallCheck);
+			RaycastHit2D rightHit = ContactWallCheck(Vector2.right, _groundMask, drawRightDebug);
 			if (rightHit)
 			{
 				result.Set(ContactFlags.OnRightWall);
 			}
 
-			RaycastHit2D leftHit = ContactWallCheck(Vector2.left, _groundMask, true);
+			bool drawLeftDebug = CheckDebugDrawFlag(DrawDebugFlags.LeftWallCheck);
+			RaycastHit2D leftHit = ContactWallCheck(Vector2.left, _groundMask, drawLeftDebug);
 			if (leftHit)
 			{
 				result.Set(ContactFlags.OnLeftWall);
@@ -254,14 +277,13 @@ namespace Game
 				Vector2.down,
 				_contactCheckDistance, _groundAndPropsMask);
 
+#if UNITY_EDITOR
+			if(CheckDebugDrawFlag(DrawDebugFlags.GroundCheck))
+			{
+				DebugDrawGroundCheck(_contactFlags.TestAll(ContactFlags.OnGround));
+			}
+#endif
 			return hit;
-		}
-
-		private void DebugDrawCollisionChecks()
-		{
-			DebugDrawGroundCheck(_contactFlags.TestAll(ContactFlags.OnGround));
-			DebugDrawWallCheck(Vector2.left, _contactFlags.TestAll(ContactFlags.OnLeftWall));
-			DebugDrawWallCheck(Vector2.right, _contactFlags.TestAll(ContactFlags.OnRightWall));
 		}
 
 		private void DebugDrawGroundCheck(bool hitOccured)
@@ -277,17 +299,6 @@ namespace Game
 				_boundingCircle.Radius,
 				(hitOccured ? Color.green : Color.grey));
 		}
-
-		private void DebugDrawWallCheck(Vector2 dir, bool hitOccured)
-		{
-			Box bodyBox = BuildBodyBox();
-
-			Vector2 start = bodyBox.Origin + (dir * ((bodyBox.Size.x * 0.5f) + _contactCheckDistance));
-			start.y += bodyBox.Size.y * 0.5f;
-			Vector2 end = start + (Vector2.down * bodyBox.Size.y);
-			Debug.DrawLine(start, end, (hitOccured ? Color.green : Color.grey));
-		}
-
 
 #if TRACK_GROUND_NORMALS
 		private void ResetGroundNormals()

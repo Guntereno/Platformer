@@ -21,6 +21,7 @@ namespace Game.Enemies
 		private int _animWalkSpeedId;
 		private int _animIsOnGroundId;
 		
+		// Mask for items which cause enemy to turn around
 		private int _turnAroundMask;
 
 		private bool FacingRight => _transform.localScale.x > 0.0f;
@@ -36,7 +37,7 @@ namespace Game.Enemies
 			_animWalkSpeedId = Animator.StringToHash("WalkSpeed");
 			_animIsOnGroundId = Animator.StringToHash("IsOnGround");
 
-			_turnAroundMask = LayerMask.GetMask("Enemies", "Props");
+			_turnAroundMask = LayerMask.GetMask("Enemies", "Props", "Ground");
 		}
 
 		protected override void Update()
