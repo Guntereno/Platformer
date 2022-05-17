@@ -282,7 +282,7 @@ namespace Game
 
 			if (IsGrippingWall && !HasJustWallJumped)
 			{
-				velocity.y = 0;
+				velocity = Vector2.zero;
 			}
 			else
 			{
