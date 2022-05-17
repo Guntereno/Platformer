@@ -21,7 +21,6 @@ namespace Game
 		[SerializeField] private Animator _animator = null;
 
 		[SerializeField] private float _deadzone = 0.2f;
-		[SerializeField] private float _maxSpeed = 1.0f;
 		[SerializeField] private float _acceleration = 1.0f;
 
 		[SerializeField] private float _jumpImpulse = 4.0f;
@@ -268,16 +267,7 @@ namespace Game
 		{
 			Vector2 velocity = _rigidBody.velocity;
 
-			// Apply friction with ground. (Player's physics material has zero
-			// friction, so we must do this ourselves.)
-			if (IsOnGround)
-			{
-				velocity += (-velocity * _groundFriction) * Time.fixedDeltaTime;
-				if (velocity.sqrMagnitude < (_groundMinVelocity * _groundMinVelocity))
-				{
-					velocity = Vector2.zero;
-				}
-			}
+			velocity = ApplyFriction(velocity, _groundFriction, _groundMinVelocity);
 
 			Vector2 inputAcceleration = CalculateInputAcceleration();
 			velocity += inputAcceleration * Time.fixedDeltaTime;
@@ -301,9 +291,7 @@ namespace Game
 				}
 			}
 
-			velocity = new Vector2(
-				Mathf.Clamp(velocity.x, -_maxSpeed, _maxSpeed),
-				Mathf.Clamp(velocity.y, -_maxSpeed, _maxSpeed));
+			velocity = ClampToMaxSpeed(velocity);
 
 			_rigidBody.velocity = velocity;
 		}
@@ -339,20 +327,6 @@ namespace Game
 			return acceleration;
 		}
 
-		private static Vector2 ClampIntoWall(Flags32<ContactFlags> contactFlags, Vector2 force)
-		{
-			if (contactFlags.TestAny(ContactFlags.OnLeftWall) && (force.x < 0.0f))
-			{
-				force.x = 0.0f;
-			}
-			else if (contactFlags.TestAny(ContactFlags.OnRightWall) && (force.x > 0.0f))
-			{
-				force.x = 0.0f;
-			}
-
-			return force;
-		}
-
 		private void UpdateAnimation()
 		{
 			float runSpeed = 0.0f;
@@ -364,7 +338,7 @@ namespace Game
 				float absXVel = Mathf.Abs(_rigidBody.velocity.x);
 				if (absXVel > 0.05f)
 				{
-					runSpeed = (absXVel / _maxSpeed);
+					runSpeed = (absXVel / MaxSpeed);
 				}
 			}
 			_animator.SetFloat(_animSpeedX, runSpeed);

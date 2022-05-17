@@ -24,7 +24,11 @@ namespace Game
 		}
 
 
+		[Min(0.0f)]
 		[SerializeField] private float _contactCheckDistance = 0.1f;
+
+		[Min(0.0f)]
+		[SerializeField] private float _maxSpeed = 1.0f;
 
 		protected Transform _transform = null;
 		protected CapsuleCollider2D _bodyCollider = null;
@@ -34,8 +38,8 @@ namespace Game
 		public bool IsOnGround => _contactFlags.TestAny(ContactFlags.OnGround);
 
 
-		// Body box is the oblong part of the capsule (without the caps)
-		protected Vector2 BodyBoxSize => _bodyBoxSize;
+		protected float MaxSpeed => _maxSpeed;
+		protected Vector2 BodyBoxSize => _bodyBoxSize; // Body box is the oblong part of the capsule (without the caps)
 		protected float CapHeight => _capHeight;
 		protected Vector2 Origin => _bodyCollider.offset + (Vector2)_transform.position;
 		protected bool IsOnWall => _contactFlags.TestAny(ContactFlags.OnLeftWall | ContactFlags.OnRightWall);
@@ -154,7 +158,9 @@ namespace Game
 		{
 			Box bodyBox = BuildBodyBox();
 
-			const float offset = 0.1f;
+			// Bring the box in by an offset, to ensure the box doesn't start in collision with another
+			// body, thus preventing the cast from registering.
+			const float offset = 0.4f;
 			Vector2 overrideSize = new Vector2(
 				bodyBox.Size.x - offset,
 				bodyBox.Size.y);
@@ -177,6 +183,44 @@ namespace Game
 
 			return hit;
 		}
+
+		protected Vector2 ApplyFriction(Vector2 velocity, float groundFriction, float velocityEpsilon)
+		{
+			// Apply friction with ground. (Characters's physics material has zero
+			// friction, so we must do this ourselves.)
+			if (IsOnGround)
+			{
+				velocity += (-velocity * groundFriction) * Time.fixedDeltaTime;
+				if (velocity.sqrMagnitude < (velocityEpsilon * velocityEpsilon))
+				{
+					velocity = Vector2.zero;
+				}
+			}
+
+			return velocity;
+		}
+		protected static Vector2 ClampIntoWall(Flags32<ContactFlags> contactFlags, Vector2 force)
+		{
+			if (contactFlags.TestAny(ContactFlags.OnLeftWall) && (force.x < 0.0f))
+			{
+				force.x = 0.0f;
+			}
+			else if (contactFlags.TestAny(ContactFlags.OnRightWall) && (force.x > 0.0f))
+			{
+				force.x = 0.0f;
+			}
+
+			return force;
+		}
+
+		protected Vector2 ClampToMaxSpeed(Vector2 velocity)
+		{
+			velocity = new Vector2(
+				Mathf.Clamp(velocity.x, -MaxSpeed, MaxSpeed),
+				Mathf.Clamp(velocity.y, -MaxSpeed, MaxSpeed));
+			return velocity;
+		}
+
 
 		private Flags32<ContactFlags> CheckForContact()
 		{

@@ -9,10 +9,14 @@ namespace Game.Enemies
 		[SerializeField] private Animator _animator = null;
 
 		[Min(0.0f)]
-		[SerializeField] private float _speed = 0.2f;
+		[SerializeField] private float _acceleration = 1.0f;
 
 		[Min(0.0f)]
 		[SerializeField] private float _permittedDropHeight = 0.0f;
+
+		[Min(0.0f)]
+		[SerializeField] private float _groundFriction = 0.1f;
+
 
 		private int _animWalkSpeedId;
 		private int _animIsOnGroundId;
@@ -37,14 +41,25 @@ namespace Game.Enemies
 
 		protected override void Update()
 		{
-			Box bodyBox = BuildBodyBox();
-			Momo.Core.DebugDraw.Box(bodyBox, Color.magenta);
+			base.Update();
+		}
 
+		protected override void FixedUpdate()
+		{
+			base.FixedUpdate();
+
+			FixedUpdateVelocity();
+		}
+
+		#endregion
+
+
+		#region Helpers
+
+		private void FixedUpdateVelocity()
+		{
 			bool isWalking = false;
-
-			// Get speed _before_ we override it, so we can know if we've stopped
-			float walkSpeed = Mathf.Abs(_rigidBody.velocity.x);
-
+			Box bodyBox = BuildBodyBox();
 			if (IsOnGround)
 			{
 				isWalking = CanWalkInDirection(bodyBox, FacingRight);
@@ -56,13 +71,24 @@ namespace Game.Enemies
 						TurnAround();
 					}
 				}
-
-				float speed = isWalking ? _speed * FacingSign : 0.0f;
-				_rigidBody.velocity = new Vector2(speed, 0.0f);
 			}
 
-			_animator.SetFloat(_animWalkSpeedId, walkSpeed);
-			_animator.SetBool(_animIsOnGroundId, IsOnGround);
+			Vector2 velocity = _rigidBody.velocity;
+			velocity = ApplyFriction(velocity, _groundFriction, 0.1f);
+
+			if(isWalking)
+			{
+				Vector2 accelleration = Vector2.zero.WithX(_acceleration * FacingSign);
+				accelleration = ClampIntoWall(CurrentContactFlags, accelleration);
+				velocity += accelleration * Time.fixedDeltaTime;
+			}
+
+			velocity = ClampToMaxSpeed(velocity);
+
+			_rigidBody.velocity = velocity;
+
+			_animator.SetFloat(_animWalkSpeedId, Mathf.Abs(velocity.x));
+			_animator.SetBool(_animIsOnGroundId, isWalking);
 		}
 
 		private void TurnAround()

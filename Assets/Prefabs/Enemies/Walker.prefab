@@ -84,9 +84,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _contactCheckDistance: 0.1
+  _maxSpeed: 4
   _animator: {fileID: 6591179665594011389}
-  _speed: 1
+  _acceleration: 150
   _permittedDropHeight: 0.2
+  _groundFriction: 0.1
 --- !u!1 &4118260169414188015
 GameObject:
   m_ObjectHideFlags: 0
