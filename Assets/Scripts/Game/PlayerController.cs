@@ -154,10 +154,17 @@ namespace Game
 		void OnGUI()
 		{
 #if UNITY_EDITOR
-			GUI.Label(new Rect(25, 25, 180, 20), $"Contact Flags: {CurrentContactFlags}");
-			GUI.Label(new Rect(25, 45, 180, 20), $"Velocity: {_rigidBody.velocity}");
-			GUI.Label(new Rect(25, 65, 180, 20), $"Air Jump Counter: {_airJumpCounter}");
-			GUI.Label(new Rect(25, 85, 180, 20), $"Move Vector: {_moveVector}");
+			const int indent = 25;
+			const int labelWidth = 800;
+			const int labelHeight = 20;
+
+			int baseLine = 25;
+
+			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Contact Flags: {CurrentContactFlags}");
+			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Velocity: {_rigidBody.velocity}");
+			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Air Jump Counter: {_airJumpCounter}");
+			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Move Vector: {_moveVector}");
+			GUI.Label(new Rect(indent, baseLine += labelHeight, labelWidth, labelHeight), $"Gripping Wall: {IsGrippingWall}");
 #endif
 		}
 
@@ -346,7 +353,7 @@ namespace Game
 			_animator.SetBool(_animIsOnGroundId, IsOnGround || IsInCoyoteTime);
 			_animator.SetFloat(_animVelocityYId, _rigidBody.velocity.y);
 			_animator.SetBool(_animIsCrouchingId, IsCrouching);
-			_animator.SetBool(_animIsGrippingWallId, IsOnWall);
+			_animator.SetBool(_animIsGrippingWallId, IsGrippingWall);
 
 			if (IsOnWall)
 			{

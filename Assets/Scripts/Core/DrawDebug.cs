@@ -80,6 +80,7 @@ namespace Momo.Core
 
 		public static void BoxCast(Vector2 origin, Vector2 size, Vector2 dir, float distance, Color color)
 		{
+			Box(origin, size, color);
 			origin += dir * distance;
 			Box(origin, size, color);
 		}

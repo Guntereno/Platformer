@@ -160,14 +160,14 @@ namespace Game
 
 			// Bring the box in by an offset, to ensure the box doesn't start in collision with another
 			// body, thus preventing the cast from registering.
-			const float offset = 0.4f;
+			const float offset = 0.1f;
 			Vector2 overrideSize = new Vector2(
 				bodyBox.Size.x - offset,
 				bodyBox.Size.y);
 			float overrideDistance = _contactCheckDistance + offset;
 
 			RaycastHit2D hit = Physics2D.BoxCast(
-				bodyBox.Origin, bodyBox.Size,
+				bodyBox.Origin, overrideSize,
 				angle: 0.0f,
 				dir,
 				distance: overrideDistance,
@@ -237,7 +237,7 @@ namespace Game
 				result.Set(ContactFlags.OnRightWall);
 			}
 
-			RaycastHit2D leftHit = ContactWallCheck(Vector2.left, _groundMask);
+			RaycastHit2D leftHit = ContactWallCheck(Vector2.left, _groundMask, true);
 			if (leftHit)
 			{
 				result.Set(ContactFlags.OnLeftWall);
