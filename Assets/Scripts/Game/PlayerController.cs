@@ -66,6 +66,8 @@ namespace Game
 
 		private Weapon _currentWeapon = null;
 
+		private const int _maxHealth = 5;
+		private int _currentHealth = _maxHealth;
 
 		public Vector2 Position => _transform.position;
 
@@ -151,7 +153,7 @@ namespace Game
 			}
 		}
 
-		void OnGUI()
+		protected override void OnGUI()
 		{
 			DebugGui();
 		}
@@ -439,7 +441,15 @@ namespace Game
 			{
 				_transform.position = _spawnPos;
 				_rigidBody.velocity = Vector2.zero;
+
+				UpdateHealth(_currentHealth - 1);
 			}
+		}
+
+		private void UpdateHealth(int newHealth)
+		{
+			_currentHealth = Mathf.Clamp(newHealth, 0, (_maxHealth - 1));
+			Singleton.Instance.UiEvents.UpdateHealth(newHealth);
 		}
 
 		#region Debug Drawing

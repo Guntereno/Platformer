@@ -15,13 +15,16 @@ namespace Game
 
 		private static Singleton _instance;
 
+		private Ui.Events _uiEvents = new Ui.Events();
+
 		public static Singleton Instance => _instance;
 		public CameraController CameraController => _cameraController;
 		public LevelController LevelController => _levelController;
 		public AudioPools AudioPools => _audioPools;
 
-
-		void Start()
+		public Ui.Events UiEvents => _uiEvents;
+		
+		void Awake()
 		{
 			if (_instance != null)
 			{

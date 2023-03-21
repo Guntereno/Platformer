@@ -121,27 +121,30 @@ namespace Game
 			DebugDraw();
 		}
 
-#if TRACK_GROUND_NORMALS
-		protected void OnCollisionEnter2D(Collision2D collision)
+		protected virtual void OnCollisionEnter2D(Collision2D collision)
 		{
+#if TRACK_GROUND_NORMALS
 			HandleGroundContacts(collision);
+#endif
 		}
 
-		private void OnCollisionStay2D(Collision2D collision)
+		protected virtual void OnCollisionStay2D(Collision2D collision)
 		{
+#if TRACK_GROUND_NORMALS
 			HandleGroundContacts(collision);
-		}
 #endif
+		}
+
 
 		protected virtual void OnGUI()
 		{
 			// Do nothing
 		}
 
-		#endregion
+#endregion
 
 
-		#region Helpers
+#region Helpers
 
 		protected virtual void DebugGui()
 		{
@@ -339,6 +342,6 @@ namespace Game
 		}
 #endif
 
-		#endregion
+#endregion
 	}
 }
