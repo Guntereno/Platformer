@@ -4,10 +4,10 @@ namespace Game.Ui
 {
 	public class HealthUiController : MonoBehaviour
 	{
-		[SerializeField] private SpriteRenderer _heartPrefab;
-		[SerializeField] private Transform _rootNode;
-		[SerializeField] private Sprite _fullHeartSprite;
-		[SerializeField] private Sprite _emptyHeartSprite;
+		[SerializeField] private SpriteRenderer _heartPrefab = null;
+		[SerializeField] private Transform _rootNode = null;
+		[SerializeField] private Sprite _fullHeartSprite = null;
+		[SerializeField] private Sprite _emptyHeartSprite = null;
 
 		private const int _maxHealth = 5;
 		private SpriteRenderer[] _heartRenderers = null;

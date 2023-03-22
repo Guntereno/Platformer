@@ -41,7 +41,7 @@ namespace Game
 		[SerializeField] private float _maxSpeed = 1.0f;
 
 		[SerializeField]
-		private DrawDebugFlags _drawDebugFlags;
+		private DrawDebugFlags _drawDebugFlags = DrawDebugFlags.None;
 
 
 		protected Transform _transform = null;
