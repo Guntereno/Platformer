@@ -46,7 +46,6 @@ namespace Game
 
 		[SerializeField] private float _fallDeathHeight = 0.0f;
 
-
 		private Vector2 _spawnPos = default;
 
 		private int _animIsOnGroundId;
@@ -54,6 +53,9 @@ namespace Game
 		private int _animVelocityYId;
 		private int _animIsCrouchingId;
 		private int _animIsGrippingWallId;
+
+		// Mask for layers which hurt the player
+		private int _painLayerMask;
 
 		private Vector2 _moveVector = default;
 
@@ -70,6 +72,7 @@ namespace Game
 		private int _currentHealth = _maxHealth;
 
 		public Vector2 Position => _transform.position;
+
 
 		public bool IsGrippingWall
 		{
@@ -122,6 +125,8 @@ namespace Game
 			_animIsCrouchingId = Animator.StringToHash("IsCrouching");
 			_animIsGrippingWallId = Animator.StringToHash("IsGrippingWall");
 
+			_painLayerMask = LayerMask.NameToLayer("Enemies");
+
 			SetWeaponIndex(0);
 		}
 
@@ -156,6 +161,17 @@ namespace Game
 		protected override void OnGUI()
 		{
 			DebugGui();
+		}
+
+		protected override void OnCollisionEnter2D(Collision2D collision)
+		{
+			base.OnCollisionEnter2D(collision);
+
+			int layerMask = collision.gameObject.layer;
+			if((layerMask & _painLayerMask) != 0)
+			{
+				HurtPlayer();
+			}
 		}
 
 		#endregion
@@ -442,8 +458,13 @@ namespace Game
 				_transform.position = _spawnPos;
 				_rigidBody.velocity = Vector2.zero;
 
-				UpdateHealth(_currentHealth - 1);
+				HurtPlayer();
 			}
+		}
+
+		private void HurtPlayer()
+		{
+			UpdateHealth(_currentHealth - 1);
 		}
 
 		private void UpdateHealth(int newHealth)
