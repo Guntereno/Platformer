@@ -75,7 +75,7 @@ TextureImporter:
       213: 6567651934934134572
     second: DinoSprites_tard_Crouch_6
   externalObjects: {}
-  serializedVersion: 11
+  serializedVersion: 12
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -92,10 +92,12 @@ TextureImporter:
     externalNormalMap: 0
     heightScale: 0.25
     normalMapFilter: 0
+    flipGreenChannel: 0
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMipmapLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -134,6 +136,8 @@ TextureImporter:
   textureFormatSet: 0
   ignorePngGamma: 0
   applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -149,6 +153,30 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
     buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
@@ -676,9 +704,33 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-  spritePackingTag: 
+    nameFileIdTable:
+      DinoSprites_tard_Crouch_0: -5903535375528579645
+      DinoSprites_tard_Crouch_1: -5080807933872897890
+      DinoSprites_tard_Crouch_2: -2943428522345507379
+      DinoSprites_tard_Crouch_3: -1904064979512709453
+      DinoSprites_tard_Crouch_4: -1730415920639917763
+      DinoSprites_tard_Crouch_5: -2806112832959337629
+      DinoSprites_tard_Crouch_6: 6567651934934134572
+      DinoSprites_tard_Hurt_0: -3705759193089104640
+      DinoSprites_tard_Hurt_1: -6988066146551665541
+      DinoSprites_tard_Hurt_2: -7589269462299410579
+      DinoSprites_tard_Idle_0: -3067182502315870561
+      DinoSprites_tard_Idle_1: 5249725201913577717
+      DinoSprites_tard_Idle_2: 2903333149999925137
+      DinoSprites_tard_Idle_3: -5432273848905237416
+      DinoSprites_tard_Jump_0: -7548357606407767907
+      DinoSprites_tard_Jump_2: -6759144333958699978
+      DinoSprites_tard_Jump_3: -5381510490822080850
+      DinoSprites_tard_Jump_4: -3487044322817823500
+      DinoSprites_tard_Walk_0: -1996195853192043617
+      DinoSprites_tard_Walk_1: -1962443445660783083
+      DinoSprites_tard_Walk_2: -1614385162137015601
+      DinoSprites_tard_Walk_3: -8103037782914051562
+      DinoSprites_tard_Walk_4: 6099956110322385645
+      DinoSprites_tard_Walk_5: -599072929602997612
+  mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  pSDShowRemoveMatteOption: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
