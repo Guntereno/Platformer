@@ -1,6 +1,7 @@
 using Game.Guns;
 using Momo.Core;
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -19,34 +20,46 @@ namespace Game
 		}
 
 		[SerializeField] private Animator _animator = null;
+		[SerializeField] private SpriteRenderer _renderer = null;
 
+		[SerializeField] private Weapon[] _weapons = null;
+
+		[Header("Input Settings")]
 		[SerializeField] private float _deadzone = 0.2f;
 		[SerializeField] private float _acceleration = 1.0f;
 
+		[Header("Ground Settings")]
+		[SerializeField] private float _groundFriction = 0.5f;
+		[SerializeField] private float _groundMinVelocity = 0.1f;
+
+		[Header("Crouch Settings")]
+		[SerializeField] private float _crouchRecoilFactor = 0.5f;
+
+		[Header("Air Settings")]
 		[SerializeField] private float _jumpImpulse = 4.0f;
 		[SerializeField] private int _numAirJumps = 1;
 		[SerializeField] private float _fallFactor = 0.0f;
 		[SerializeField] private float _lowJumpFactor = 0.0f;
 		[SerializeField] private float _airborneAccelerationFactor = 1.0f;
-
 		[SerializeField] private float _coyoteTime = 0.0f;
+		[SerializeField] private float _fallDeathHeight = 0.0f;
 
-		[SerializeField] private Weapon[] _weapons = null;
-
-		[SerializeField] private float _crouchRecoilFactor = 0.5f;
-
+		[Header("Wall Settings")]
 		[SerializeField] private float _wallGripGravityScale = 0.2f;
-
-		[SerializeField] private float _groundFriction = 0.5f;
-		[SerializeField] private float _groundMinVelocity = 0.1f;
-
 		[SerializeField] private float _wallJumpAngleRadians = 0.0f;
 		[SerializeField] private float _wallJumpImpulse = 4.0f;
 		[SerializeField] private float _wallJumpLaunchDuration = 0.25f;
 
-		[SerializeField] private float _fallDeathHeight = 0.0f;
+		[Header("Pain Settings")]
+		[SerializeField] private float _bounceForce = 10.0f;
+
+		[Header("Invincibility Settings")]
+		[SerializeField] private float _invincibilityDurationSeconds = 1.0f;
+		[SerializeField] private float _invincibilityFlashIntervalSeconds = 0.01f;
+		[SerializeField] private Color _invincibilityFlashColor = new Color(1.0f, 1.0f, 1.0f, 0.5f);
 
 		private Vector2 _spawnPos = default;
+		private Color _defaultSpriteColor = Color.white;
 
 		private int _animIsOnGroundId;
 		private int _animSpeedX;
@@ -72,6 +85,8 @@ namespace Game
 		private int _currentHealth = _maxHealth;
 
 		public Vector2 Position => _transform.position;
+
+		private Coroutine _invincibilityCoroutine = null;
 
 
 		public bool IsGrippingWall
@@ -110,6 +125,13 @@ namespace Game
 
 		private bool HasJustWallJumped => (Time.time - _lastTimeWallJumped) < _wallJumpLaunchDuration;
 
+		private bool IsInvincible
+		{
+			get
+			{
+				return _invincibilityCoroutine != null;
+			}
+		}
 
 		#region Unity Callbacks
 
@@ -118,6 +140,7 @@ namespace Game
 			base.Start();
 
 			_spawnPos = _transform.position;
+			_defaultSpriteColor = _renderer.color;
 
 			_animIsOnGroundId = Animator.StringToHash("IsOnGround");
 			_animSpeedX = Animator.StringToHash("SpeedX");
@@ -125,7 +148,7 @@ namespace Game
 			_animIsCrouchingId = Animator.StringToHash("IsCrouching");
 			_animIsGrippingWallId = Animator.StringToHash("IsGrippingWall");
 
-			_painLayerMask = LayerMask.NameToLayer("Enemies");
+			_painLayerMask = 1 << LayerMask.NameToLayer("Enemies");
 
 			SetWeaponIndex(0);
 		}
@@ -167,11 +190,22 @@ namespace Game
 		{
 			base.OnCollisionEnter2D(collision);
 
-			int layerMask = collision.gameObject.layer;
-			if((layerMask & _painLayerMask) != 0)
+			if (IsInvincible)
 			{
-				HurtPlayer();
+				return;
 			}
+
+			int layerMask = (1 << collision.gameObject.layer);
+			if ((layerMask & _painLayerMask) == 0)
+			{
+				return;
+			}
+
+			HurtPlayer();
+
+			Vector2 direction = transform.position - collision.transform.position;
+			direction = direction.normalized;
+			_rigidBody.AddForce(direction * _bounceForce, ForceMode2D.Impulse);
 		}
 
 		#endregion
@@ -465,12 +499,45 @@ namespace Game
 		private void HurtPlayer()
 		{
 			UpdateHealth(_currentHealth - 1);
+
+			TriggerInvincibility();
 		}
 
 		private void UpdateHealth(int newHealth)
 		{
 			_currentHealth = Mathf.Clamp(newHealth, 0, (_maxHealth - 1));
 			Singleton.Instance.UiEvents.UpdateHealth(newHealth);
+		}
+
+		private void TriggerInvincibility()
+		{
+			if(_invincibilityCoroutine != null)
+			{
+				StopCoroutine(_invincibilityCoroutine);
+			}
+
+			_invincibilityCoroutine = StartCoroutine(InvincibilityCoroutine());
+		}
+
+		private IEnumerator InvincibilityCoroutine()
+		{
+			Color flashColor = new Color(1.0f, 1.0f, 1.0f, 0.5f); // Adjust the color and alpha as desired
+
+			float elapsedTime = 0.0f;
+			_renderer.color = _defaultSpriteColor;
+
+			while (elapsedTime < _invincibilityDurationSeconds)
+			{
+				_renderer.color = flashColor;
+				yield return new WaitForSeconds(_invincibilityFlashIntervalSeconds);
+				_renderer.color = _defaultSpriteColor;
+				yield return new WaitForSeconds(_invincibilityFlashIntervalSeconds);
+				elapsedTime += _invincibilityFlashIntervalSeconds * 2.0f;
+			}
+
+			_renderer.color = _defaultSpriteColor;
+
+			_invincibilityCoroutine = null;
 		}
 
 		#region Debug Drawing

@@ -30,6 +30,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1.51, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2619971862419907298}
   m_Father: {fileID: 0}
@@ -51,25 +52,30 @@ MonoBehaviour:
   _maxSpeed: 11
   _drawDebugFlags: 0
   _animator: {fileID: 2619971862419907296}
+  _renderer: {fileID: 2619971862419907299}
+  _weapons:
+  - {fileID: 8573154131504116638}
+  - {fileID: 5232282438038106007}
   _deadzone: 0.2
   _acceleration: 150
+  _groundFriction: 10
+  _groundMinVelocity: 0.1
+  _crouchRecoilFactor: 0.2
   _jumpImpulse: 14
   _numAirJumps: 1
   _fallFactor: 0.08
   _lowJumpFactor: 0.05
   _airborneAccelerationFactor: 0.5
   _coyoteTime: 0.08
-  _weapons:
-  - {fileID: 8573154131504116638}
-  - {fileID: 5232282438038106007}
-  _crouchRecoilFactor: 0.2
+  _fallDeathHeight: -15
   _wallGripGravityScale: 0.75
-  _groundFriction: 10
-  _groundMinVelocity: 0.1
   _wallJumpAngleRadians: 1.2
   _wallJumpImpulse: 20
   _wallJumpLaunchDuration: 0.25
-  _fallDeathHeight: -15
+  _bounceForce: 20
+  _invincibilityDurationSeconds: 2
+  _invincibilityFlashIntervalSeconds: 0.1
+  _invincibilityFlashColor: {r: 1, g: 1, b: 1, a: 0.5}
 --- !u!50 &2619971862393951112
 Rigidbody2D:
   serializedVersion: 4
@@ -87,6 +93,12 @@ Rigidbody2D:
   m_AngularDrag: 0.05
   m_GravityScale: 1
   m_Material: {fileID: 6200000, guid: ef514670555d8154bb9c3152ec453ffe, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 0
   m_CollisionDetection: 0
@@ -131,6 +143,25 @@ CapsuleCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 6200000, guid: ef514670555d8154bb9c3152ec453ffe, type: 2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
@@ -165,6 +196,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5875061, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2619971864042329439}
   m_Father: {fileID: 2619971862393951115}
@@ -224,7 +256,7 @@ SpriteRenderer:
   m_SpriteSortPoint: 0
 --- !u!95 &2619971862419907296
 Animator:
-  serializedVersion: 3
+  serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -237,10 +269,12 @@ Animator:
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorControllerStateOnDisable: 0
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &2619971864042329438
 GameObject:
   m_ObjectHideFlags: 0
@@ -267,6 +301,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.393, y: 0.302, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7054435105532903088}
   - {fileID: 4018123263266815412}
@@ -278,6 +313,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 2619971864042329439}
     m_Modifications:
     - target: {fileID: 2606009564482615147, guid: a0a7b87b0c168ed4698f2b8b0992bd99, type: 3}
@@ -329,6 +365,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a0a7b87b0c168ed4698f2b8b0992bd99, type: 3}
 --- !u!4 &7054435105532903088 stripped
 Transform:
@@ -351,6 +390,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 2619971864042329439}
     m_Modifications:
     - target: {fileID: 6261838004146784059, guid: 2551f60ecf39d72419175210e05cd6dd, type: 3}
@@ -402,6 +442,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2551f60ecf39d72419175210e05cd6dd, type: 3}
 --- !u!4 &4018123263266815412 stripped
 Transform:
