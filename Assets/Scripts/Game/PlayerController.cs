@@ -77,6 +77,8 @@ namespace Game
 		private int _airJumpCounter = 0;
 		private float _lastTimeWallJumped = float.MinValue;
 
+		private ContactFlags _grippingWall = ContactFlags.None;
+
 		private float _lastTimeOnGround = float.MinValue;
 
 		private Weapon _currentWeapon = null;
@@ -91,15 +93,7 @@ namespace Game
 
 		public bool IsGrippingWall
 		{
-			get
-			{
-				if (IsOnGround || IsCrouchHeld)
-				{
-					return false;
-				}
-
-				return (CurrentContactFlags.TestAny(ContactFlags.OnWall));
-			}
+			get => _grippingWall != ContactFlags.None;
 		}
 
 		private bool IsCrouching => IsOnGround && IsCrouchHeld;
@@ -172,6 +166,7 @@ namespace Game
 			base.Update();
 
 			UpdateFiring();
+			UpdateWallGrip();
 			UpdateAnimation();
 			UpdateFallDeath();
 
@@ -485,6 +480,74 @@ namespace Game
 			}
 		}
 
+		private void UpdateWallGrip()
+		{
+			if (IsGrippingWall)
+			{
+				CheckLetGoOfWall();
+			}
+			else
+			{
+				CheckGripWall();
+			}
+		}
+
+		private void CheckLetGoOfWall()
+		{
+			if (IsOnGround || IsCrouchHeld)
+			{
+				_grippingWall = ContactFlags.None;
+				return;
+			}
+
+			switch (_grippingWall)
+			{
+				case ContactFlags.OnLeftWall:
+					{
+						if (!CurrentContactFlags.TestAll(ContactFlags.OnLeftWall) || _moveVector.x > 0)
+						{
+							_grippingWall = ContactFlags.None;
+						}
+					}
+					break;
+
+				case ContactFlags.OnRightWall:
+					{
+						if (!CurrentContactFlags.TestAll(ContactFlags.OnRightWall) || (_moveVector.x < 0))
+						{
+							_grippingWall = ContactFlags.None;
+						}
+					}
+					break;
+
+				default:
+					{
+						Debug.LogError($"Invalid ContactFlags for _grippingWall!: {_grippingWall}");
+						break;
+					}
+			}
+		}
+
+		private void CheckGripWall()
+		{
+			if (!CurrentContactFlags.TestAny(ContactFlags.OnWall))
+			{
+				return;
+			}
+
+			if (CurrentContactFlags.TestAny(ContactFlags.OnLeftWall) && (_moveVector.x < 0))
+			{
+				_grippingWall = ContactFlags.OnLeftWall;
+				return;
+			}
+
+			if (CurrentContactFlags.TestAny(ContactFlags.OnRightWall) && (_moveVector.x > 0))
+			{
+				_grippingWall = ContactFlags.OnRightWall;
+				return;
+			}
+		}
+
 		private void UpdateFallDeath()
 		{
 			if (_transform.position.y < _fallDeathHeight)
@@ -511,7 +574,7 @@ namespace Game
 
 		private void TriggerInvincibility()
 		{
-			if(_invincibilityCoroutine != null)
+			if (_invincibilityCoroutine != null)
 			{
 				StopCoroutine(_invincibilityCoroutine);
 			}
