@@ -59,6 +59,8 @@ namespace Game.Enemies
 
 		private void FixedUpdateVelocity()
 		{
+			Vector2 velocity = _rigidBody.velocity;
+
 			bool isWalking = false;
 			Box bodyBox = BuildBodyBox();
 			if (IsOnGround)
@@ -72,16 +74,15 @@ namespace Game.Enemies
 						TurnAround();
 					}
 				}
-			}
 
-			Vector2 velocity = _rigidBody.velocity;
-			velocity = ApplyFriction(velocity, _groundFriction, 0.1f);
+				velocity = ApplyFriction(velocity, _groundFriction, 0.1f);
 
-			if(isWalking)
-			{
-				Vector2 accelleration = Vector2.zero.WithX(_acceleration * FacingSign);
-				accelleration = ClampIntoWall(CurrentContactFlags, accelleration);
-				velocity += accelleration * Time.fixedDeltaTime;
+				if (isWalking)
+				{
+					Vector2 accelleration = Vector2.zero.WithX(_acceleration * FacingSign);
+					accelleration = ClampIntoWall(CurrentContactFlags, accelleration);
+					velocity += accelleration * Time.fixedDeltaTime;
+				}
 			}
 
 			velocity = ClampToMaxSpeed(velocity);
@@ -89,7 +90,7 @@ namespace Game.Enemies
 			_rigidBody.velocity = velocity;
 
 			_animator.SetFloat(_animWalkSpeedId, Mathf.Abs(velocity.x));
-			_animator.SetBool(_animIsOnGroundId, isWalking);
+			_animator.SetBool(_animIsOnGroundId, IsOnGround);
 		}
 
 		private void TurnAround()

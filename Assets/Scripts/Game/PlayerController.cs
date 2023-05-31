@@ -148,7 +148,7 @@ namespace Game
 			_animIsCrouchingId = Animator.StringToHash("IsCrouching");
 			_animIsGrippingWallId = Animator.StringToHash("IsGrippingWall");
 
-			_painLayerMask = 1 << LayerMask.NameToLayer("Enemies");
+			_painLayerMask = LayerMask.GetMask("Enemies");
 
 			SetWeaponIndex(0);
 		}
