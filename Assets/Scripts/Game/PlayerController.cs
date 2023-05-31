@@ -521,14 +521,12 @@ namespace Game
 
 		private IEnumerator InvincibilityCoroutine()
 		{
-			Color flashColor = new Color(1.0f, 1.0f, 1.0f, 0.5f); // Adjust the color and alpha as desired
-
 			float elapsedTime = 0.0f;
 			_renderer.color = _defaultSpriteColor;
 
 			while (elapsedTime < _invincibilityDurationSeconds)
 			{
-				_renderer.color = flashColor;
+				_renderer.color = _invincibilityFlashColor;
 				yield return new WaitForSeconds(_invincibilityFlashIntervalSeconds);
 				_renderer.color = _defaultSpriteColor;
 				yield return new WaitForSeconds(_invincibilityFlashIntervalSeconds);
