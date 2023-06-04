@@ -211,6 +211,11 @@ namespace Game
 		private void OnMove(InputValue input)
 		{
 			_moveVector = input.Get<Vector2>();
+
+			if(IsCrouchHeld)
+			{
+				_moveVector.x = 0.0f;
+			}
 		}
 
 		private void OnJump(InputValue input)
