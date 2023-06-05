@@ -17,9 +17,14 @@ namespace Game.Enemies
 		[Min(0.0f)]
 		[SerializeField] private float _groundFriction = 0.1f;
 
+		[Min(0.0f)]
+		[SerializeField] private float _initialHealth = 1.0f;
+
 
 		private int _animWalkSpeedId;
 		private int _animIsOnGroundId;
+
+		private float _currentHealth = 1.0f;
 		
 		// Mask for items which cause enemy to turn around
 		private int _turnAroundMask;
@@ -37,7 +42,10 @@ namespace Game.Enemies
 			_animWalkSpeedId = Animator.StringToHash("WalkSpeed");
 			_animIsOnGroundId = Animator.StringToHash("IsOnGround");
 
+			_painLayerMask = LayerMask.GetMask("PlayerProjectiles");
 			_turnAroundMask = LayerMask.GetMask("Enemies", "Props", "Ground");
+
+			Init();
 		}
 
 		protected override void Update()
@@ -56,6 +64,11 @@ namespace Game.Enemies
 
 
 		#region Helpers
+
+		private void Init()
+		{
+			_currentHealth = _initialHealth;
+		}
 
 		private void FixedUpdateVelocity()
 		{
@@ -136,6 +149,28 @@ namespace Game.Enemies
 #endif
 
 			return hitOccured;
+		}
+
+		protected override void OnHurt(Collision2D collision)
+		{
+			base.OnHurt(collision);
+
+			Hurt(1.0f);
+		}
+
+		private void Hurt(float damage)
+		{
+			_currentHealth -= damage;
+			if(_currentHealth <= 0.0f)
+			{
+				_currentHealth = 0.0f;
+				Kill();
+			}
+		}
+
+		private void Kill()
+		{
+			gameObject.SetActive(false);
 		}
 
 		#endregion

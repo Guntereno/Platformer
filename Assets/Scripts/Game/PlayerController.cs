@@ -67,9 +67,6 @@ namespace Game
 		private int _animIsCrouchingId;
 		private int _animIsGrippingWallId;
 
-		// Mask for layers which hurt the player
-		private int _painLayerMask;
-
 		private Vector2 _moveVector = default;
 
 		private Flags32<InputFlags> _inputFlags = InputFlags.None;
@@ -87,8 +84,6 @@ namespace Game
 		private int _currentHealth = _maxHealth;
 
 		public Vector2 Position => _transform.position;
-
-		private Coroutine _invincibilityCoroutine = null;
 
 
 		public bool IsGrippingWall
@@ -118,14 +113,6 @@ namespace Game
 		}
 
 		private bool HasJustWallJumped => (Time.time - _lastTimeWallJumped) < _wallJumpLaunchDuration;
-
-		private bool IsInvincible
-		{
-			get
-			{
-				return _invincibilityCoroutine != null;
-			}
-		}
 
 		#region Unity Callbacks
 
@@ -179,28 +166,6 @@ namespace Game
 		protected override void OnGUI()
 		{
 			DebugGui();
-		}
-
-		protected override void OnCollisionEnter2D(Collision2D collision)
-		{
-			base.OnCollisionEnter2D(collision);
-
-			if (IsInvincible)
-			{
-				return;
-			}
-
-			int layerMask = (1 << collision.gameObject.layer);
-			if ((layerMask & _painLayerMask) == 0)
-			{
-				return;
-			}
-
-			HurtPlayer();
-
-			Vector2 direction = transform.position - collision.transform.position;
-			direction = direction.normalized;
-			_rigidBody.AddForce(direction * _bounceForce, ForceMode2D.Impulse);
 		}
 
 		#endregion
@@ -276,6 +241,17 @@ namespace Game
 
 			base.DebugGui();
 #endif
+		}
+
+		protected override void OnHurt(Collision2D collision)
+		{
+			base.OnHurt(collision);
+
+			Vector2 direction = transform.position - collision.transform.position;
+			direction = direction.normalized;
+			_rigidBody.AddForce(direction * _bounceForce, ForceMode2D.Impulse);
+
+			HurtPlayer();
 		}
 
 		private void NextWeapon()
@@ -568,23 +544,13 @@ namespace Game
 		{
 			UpdateHealth(_currentHealth - 1);
 
-			TriggerInvincibility();
+			TriggerInvincibility(InvincibilityCoroutine());
 		}
 
 		private void UpdateHealth(int newHealth)
 		{
 			_currentHealth = Mathf.Clamp(newHealth, 0, (_maxHealth - 1));
 			Singleton.Instance.UiEvents.UpdateHealth(newHealth);
-		}
-
-		private void TriggerInvincibility()
-		{
-			if (_invincibilityCoroutine != null)
-			{
-				StopCoroutine(_invincibilityCoroutine);
-			}
-
-			_invincibilityCoroutine = StartCoroutine(InvincibilityCoroutine());
 		}
 
 		private IEnumerator InvincibilityCoroutine()
@@ -603,7 +569,7 @@ namespace Game
 
 			_renderer.color = _defaultSpriteColor;
 
-			_invincibilityCoroutine = null;
+			EndInvincibility();
 		}
 
 		#region Debug Drawing

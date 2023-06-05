@@ -5,6 +5,7 @@ using UnityEngine;
 using Momo.Core.Geometry;
 using Momo.Core;
 using UnityEditor;
+using System.Collections;
 
 namespace Game
 {
@@ -60,6 +61,15 @@ namespace Game
 		protected Flags32<ContactFlags> CurrentContactFlags => _contactFlags;
 		protected int GroundMask => _groundMask;
 
+		protected bool IsInvincible
+		{
+			get
+			{
+				return _invincibilityCoroutine != null;
+			}
+		}
+
+		protected int _painLayerMask;
 		private int _groundAndPropsMask;
 		private int _groundMask;
 
@@ -68,6 +78,8 @@ namespace Game
 		private Flags32<ContactFlags> _contactFlags = ContactFlags.None;
 
 		private Circle _boundingCircle;
+
+		private Coroutine _invincibilityCoroutine = null;
 
 
 #if TRACK_GROUND_NORMALS
@@ -83,6 +95,7 @@ namespace Game
 
 		protected virtual void Start()
 		{
+			_painLayerMask = 0;
 			_groundAndPropsMask = LayerMask.GetMask("Ground", "Props");
 			_groundMask = LayerMask.GetMask("Ground");
 
@@ -126,6 +139,19 @@ namespace Game
 #if TRACK_GROUND_NORMALS
 			HandleGroundContacts(collision);
 #endif
+
+			if (IsInvincible)
+			{
+				return;
+			}
+
+			int layerMask = (1 << collision.gameObject.layer);
+			if ((layerMask & _painLayerMask) == 0)
+			{
+				return;
+			}
+
+			OnHurt(collision);
 		}
 
 		protected virtual void OnCollisionStay2D(Collision2D collision)
@@ -158,6 +184,26 @@ namespace Game
 			DebugDrawGroundNormals();
 #endif
 #endif
+		}
+
+		protected virtual void OnHurt(Collision2D collision)
+		{
+			// Do nothing
+		}
+
+		protected void TriggerInvincibility(IEnumerator coroutine)
+		{
+			if (_invincibilityCoroutine != null)
+			{
+				StopCoroutine(_invincibilityCoroutine);
+			}
+
+			_invincibilityCoroutine = StartCoroutine(coroutine);
+		}
+
+		protected void EndInvincibility()
+		{
+			_invincibilityCoroutine = null;
 		}
 
 		protected Box BuildBodyBox()
