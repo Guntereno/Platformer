@@ -7,7 +7,7 @@ AnimationClip:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Tard_Walk
-  serializedVersion: 6
+  serializedVersion: 7
   m_Legacy: 0
   m_Compressed: 0
   m_UseHighQualityCurve: 1
@@ -18,7 +18,8 @@ AnimationClip:
   m_ScaleCurves: []
   m_FloatCurves: []
   m_PPtrCurves:
-  - curve:
+  - serializedVersion: 2
+    curve:
     - time: 0
       value: {fileID: -1996195853192043617, guid: e9b1bbfc9be90cf4eab0c0c37fa0daf9, type: 3}
     - time: 0.125
@@ -32,9 +33,10 @@ AnimationClip:
     - time: 0.625
       value: {fileID: -599072929602997612, guid: e9b1bbfc9be90cf4eab0c0c37fa0daf9, type: 3}
     attribute: m_Sprite
-    path: 
+    path: Character
     classID: 212
     script: {fileID: 0}
+    flags: 2
   m_SampleRate: 8
   m_WrapMode: 0
   m_Bounds:
@@ -43,12 +45,14 @@ AnimationClip:
   m_ClipBindingConstant:
     genericBindings:
     - serializedVersion: 2
-      path: 0
+      path: 294335127
       attribute: 0
       script: {fileID: 0}
       typeID: 212
       customType: 23
       isPPtrCurve: 1
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
     pptrCurveMapping:
     - {fileID: -1996195853192043617, guid: e9b1bbfc9be90cf4eab0c0c37fa0daf9, type: 3}
     - {fileID: -1962443445660783083, guid: e9b1bbfc9be90cf4eab0c0c37fa0daf9, type: 3}
